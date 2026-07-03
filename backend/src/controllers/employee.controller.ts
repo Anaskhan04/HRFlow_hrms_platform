@@ -1,0 +1,136 @@
+import { Request, Response, NextFunction } from "express";
+
+import employeeService from "../services/employee.service";
+import {
+  createEmployeeSchema,
+  updateEmployeeSchema,
+} from "../validators/employee.validator";
+
+class EmployeeController {
+  async create(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const data = createEmployeeSchema.parse(req.body);
+
+      const employee =
+        await employeeService.createEmployee(data);
+
+      res.status(201).json({
+        success: true,
+        message: "Employee created successfully.",
+        data: employee,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAll(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const employees =
+        await employeeService.getEmployees();
+
+      res.status(200).json({
+        success: true,
+        data: employees,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getById(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const employee =
+        await employeeService.getEmployeeById(req.params.id as string);
+
+      if (!employee) {
+        res.status(404).json({
+          success: false,
+          message: "Employee not found.",
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: employee,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async update(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const existingEmployee =
+        await employeeService.getEmployeeById(req.params.id as string);
+
+      if (!existingEmployee) {
+        res.status(404).json({
+          success: false,
+          message: "Employee not found.",
+        });
+        return;
+      }
+
+      const data = updateEmployeeSchema.parse(req.body);
+
+      const employee =
+        await employeeService.updateEmployee(req.params.id as string, data);
+
+      res.status(200).json({
+        success: true,
+        message: "Employee updated successfully.",
+        data: employee,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async delete(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const existingEmployee =
+        await employeeService.getEmployeeById(req.params.id as string);
+
+      if (!existingEmployee) {
+        res.status(404).json({
+          success: false,
+          message: "Employee not found.",
+        });
+        return;
+      }
+
+      await employeeService.deleteEmployee(req.params.id as string);
+
+      res.status(200).json({
+        success: true,
+        message: "Employee deleted successfully.",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+export default new EmployeeController();

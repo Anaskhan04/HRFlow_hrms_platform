@@ -25,23 +25,18 @@ class OrganizationController {
     }
   }
 
-  async getAll(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const organizations =
-        await organizationService.getOrganizations();
+ async getAll(req: Request, res: Response) {
+  console.log("Controller reached");
 
-      res.status(200).json({
-        success: true,
-        data: organizations,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+  const data = await organizationService.getOrganizations();
+
+  console.log(data);
+
+  res.json({
+    success: true,
+    data,
+  });
+}
 
   async getById(
     req: Request,
