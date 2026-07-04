@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import authService from "../services/auth.service";
-import { loginSchema, registerSchema, changePasswordSchema } from "../validators/auth.validator";
+import { registerSchema, loginSchema } from "../validators/auth.validator";
 
 class AuthController {
   async register(
@@ -35,59 +35,6 @@ class AuthController {
         success: true,
         message: "Login successful.",
         data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getMe(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const userId = (req as any).user?.userId;
-      if (!userId) {
-        res.status(401).json({
-          success: false,
-          message: "Unauthorized.",
-        });
-        return;
-      }
-
-      const user = await authService.getMe(userId);
-
-      res.status(200).json({
-        success: true,
-        data: user,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async changePassword(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const userId = (req as any).user?.userId;
-      if (!userId) {
-        res.status(401).json({
-          success: false,
-          message: "Unauthorized.",
-        });
-        return;
-      }
-
-      const data = changePasswordSchema.parse(req.body);
-      await authService.changePassword(userId, data);
-
-      res.status(200).json({
-        success: true,
-        message: "Password changed successfully.",
       });
     } catch (error) {
       next(error);

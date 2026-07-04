@@ -18,7 +18,12 @@ class AuthRepository {
       },
     });
   }
-
+  
+async findByEmailWithPassword(email: string): Promise<User | null> {
+  return prisma.user.findUnique({
+    where: { email },
+  });
+}
   async findById(id: string): Promise<User | null> {
     return prisma.user.findUnique({
       where: { id },
@@ -31,16 +36,6 @@ class AuthRepository {
   async findByEmployeeId(employeeId: string): Promise<User | null> {
     return prisma.user.findUnique({
       where: { employeeId },
-    });
-  }
-
-  async update(
-    id: string,
-    data: Prisma.UserUncheckedUpdateInput | Prisma.UserUpdateInput
-  ): Promise<User> {
-    return prisma.user.update({
-      where: { id },
-      data,
     });
   }
 }

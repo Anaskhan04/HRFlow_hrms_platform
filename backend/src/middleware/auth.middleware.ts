@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken, TokenPayload } from "../utils/jwt";
-import { Role } from "@prisma/client";
 
-export interface AuthenticatedRequest extends Request {
-  user?: TokenPayload;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: TokenPayload;
+    }
+  }
 }
 
 export const authenticate = (
@@ -31,7 +34,7 @@ export const authenticate = (
     }
 
     const decoded = verifyToken(token);
-    (req as AuthenticatedRequest).user = decoded;
+    req.user = decoded;
     next();
   } catch (error) {
     res.status(401).json({
@@ -41,30 +44,4 @@ export const authenticate = (
   }
 };
 
-export const authorize = (...allowedRoles: Role[]) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as AuthenticatedRequest).user;
-    if (!user) {
-      res.status(401).json({
-        success: false,
-        message: "Unauthorized.",
-      });
-      return;
-    }
-
-    if (!allowedRoles.includes(user.role)) {
-      res.status(403).json({
-        success: false,
-        message: "Forbidden. You do not have permission to perform this action.",
-      });
-      return;
-    }
-
-    next();
-  };
-};
-
-export default {
-  authenticate,
-  authorize,
-};
+export default authenticate;

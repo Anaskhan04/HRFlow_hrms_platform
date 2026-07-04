@@ -1,6 +1,9 @@
 import { Router } from "express";
-import employeeController from "../controllers/employee.controller";
+import { Role } from "@prisma/client";
 
+import employeeController from "../controllers/employee.controller";
+import authenticate from "../middleware/auth.middleware";
+import authorize from "../middleware/role.middleware";
 const router = Router();
 
 router.post("/", employeeController.create);
