@@ -22,6 +22,14 @@ enum EmployeeStatus {
   TERMINATED
 }
 
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+
 model Organization {
   id          String       @id @default(uuid())
   name        String
@@ -40,66 +48,80 @@ model Organization {
   updatedAt   DateTime     @updatedAt
   departments Department[]
   employees   Employee[]
+  leaveTypes  LeaveType[]
 }
 
 model Employee {
-  id           String @id @default(uuid())
-  employeeCode String @unique
-
-  firstName String
-  lastName  String
-
-  email String  @unique
-  phone String?
-
-  designation String
-
-  departmentId String?
-  department   Department? @relation(fields: [departmentId], references: [id])
-
-  joiningDate DateTime
-
-  salary Float?
-
-  status EmployeeStatus @default(ACTIVE)
-
+  id             String         @id @default(uuid())
+  employeeCode   String         @unique
+  firstName      String
+  lastName       String
+  email          String         @unique
+  phone          String?
+  designation    String
+  joiningDate    DateTime
+  salary         Float?
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-
-  user User?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  departmentId   String?
+  status         EmployeeStatus @default(ACTIVE)
+  department     Department?    @relation(fields: [departmentId], references: [id])
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  user           User?
+  leaveRequests  LeaveRequest[]
 }
 
 model Department {
-  id             String  @id @default(uuid())
+  id             String       @id @default(uuid())
   name           String
   description    String?
   organizationId String
-
-  organization Organization @relation(fields: [organizationId], references: [id])
-  employees    Employee[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  employees      Employee[]
 
   @@unique([organizationId, name])
 }
 
 model User {
-  id String @id @default(uuid())
-
-  email    String @unique
-  password String
-
-  role Role @default(EMPLOYEE)
-
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  role       Role     @default(EMPLOYEE)
   employeeId String   @unique
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   employee   Employee @relation(fields: [employeeId], references: [id])
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
+
+model LeaveType {
+  id             String         @id @default(uuid())
+  name           String
+  description    String?
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  leaveRequests  LeaveRequest[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([organizationId, name])
+}
+
+model LeaveRequest {
+  id          String      @id @default(uuid())
+  employeeId  String
+  employee    Employee    @relation(fields: [employeeId], references: [id])
+  leaveTypeId String
+  leaveType   LeaveType   @relation(fields: [leaveTypeId], references: [id])
+  startDate   DateTime
+  endDate     DateTime
+  reason      String
+  status      LeaveStatus @default(PENDING)
+  approvedBy  String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
