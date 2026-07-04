@@ -29,6 +29,19 @@ enum LeaveStatus {
   CANCELLED
 }
 
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  ON_LEAVE
+}
+
+enum PayrollStatus {
+  PENDING
+  GENERATED
+  PAID
+}
 
 model Organization {
   id          String       @id @default(uuid())
@@ -70,6 +83,8 @@ model Employee {
   organization   Organization   @relation(fields: [organizationId], references: [id])
   user           User?
   leaveRequests  LeaveRequest[]
+  attendances    Attendance[]
+  payrolls       Payroll[]
 }
 
 model Department {
@@ -125,3 +140,37 @@ model LeaveRequest {
   updatedAt   DateTime    @updatedAt
 }
 
+model Attendance {
+  id           String           @id @default(uuid())
+  employeeId   String
+  employee     Employee         @relation(fields: [employeeId], references: [id])
+  date         DateTime
+  checkIn      DateTime?
+  checkOut     DateTime?
+  workingHours Float?
+  status       AttendanceStatus @default(PRESENT)
+  remarks      String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([employeeId, date])
+}
+
+model Payroll {
+  id          String        @id @default(uuid())
+  employeeId  String
+  employee    Employee      @relation(fields: [employeeId], references: [id])
+  month       Int
+  year        Int
+  basicSalary Float
+  allowances  Float         @default(0)
+  deductions  Float         @default(0)
+  netSalary   Float
+  status      PayrollStatus @default(PENDING)
+  generatedAt DateTime?
+  paidAt      DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([employeeId, month, year])
+}
