@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { EmployeeStatus } from "@prisma/client";
 
 export const createEmployeeSchema = z.object({
     employeeCode: z
@@ -21,13 +22,14 @@ export const createEmployeeSchema = z.object({
         .string()
         .min(1, "Designation is required"),
 
+    departmentId: z.string().optional(),
     department: z.string().optional(),
 
     joiningDate: z.coerce.date(),
 
     salary: z.number().positive().optional(),
 
-    status: z.string().optional(),
+    status: z.nativeEnum(EmployeeStatus).optional(),
 
     organizationId: z
         .string()

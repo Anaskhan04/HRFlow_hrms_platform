@@ -10,3 +10,16 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+  import { hashPassword, comparePassword } from "./src/utils/password";
+
+async function test() {
+  const hashed = await hashPassword("password123");
+
+  console.log(hashed);
+
+  const ok = await comparePassword("password123", hashed);
+
+  console.log(ok);
+}
+
+test();
