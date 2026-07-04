@@ -7,7 +7,7 @@ import organizationRoutes from "./routes/organization.routes";
 import employeeRoutes from "./routes/employee.routes";
 import departmentRoutes from "./routes/department.routes";
 import authRoutes from "./routes/auth.routes";
-
+import dashboardRoutes from "./routes/dashboard.routes";
 const app = express();
 
 // Middleware
@@ -15,7 +15,6 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
-
 // Routes
 app.get('/api/v1/health', (req: Request, res: Response) => {
   res.json({
@@ -23,6 +22,7 @@ app.get('/api/v1/health', (req: Request, res: Response) => {
     message: 'HRFlow API is running',
   });
 });
+app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/organizations", organizationRoutes);
 app.use("/api/v1/employees", employeeRoutes);
