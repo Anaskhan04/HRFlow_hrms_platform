@@ -8,6 +8,8 @@ import employeeRoutes from "./routes/employee.routes";
 import departmentRoutes from "./routes/department.routes";
 import authRoutes from "./routes/auth.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./config/swagger";
 const app = express();
 
 // Middleware
@@ -22,6 +24,7 @@ app.get('/api/v1/health', (req: Request, res: Response) => {
     message: 'HRFlow API is running',
   });
 });
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/organizations", organizationRoutes);
