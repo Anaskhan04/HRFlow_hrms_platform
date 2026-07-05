@@ -21,11 +21,12 @@ class EmployeeController {
   });
 
   getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const employees = await employeeService.getEmployees();
+    const result = await employeeService.getEmployees(req.query);
 
     res.status(200).json({
       success: true,
-      data: employees,
+      data: result,
+      ...result,
     });
   });
 

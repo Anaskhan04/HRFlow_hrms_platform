@@ -1,0 +1,13 @@
+[33m242bb01[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: add dashboard analytics module
+ backend/src/controllers/attendance.controller.ts   | 209 [32m+++++[m[31m-------[m
+ backend/src/controllers/auth.controller.ts         |  55 [32m++[m[31m--[m
+ backend/src/controllers/dashboard.controller.ts    |  27 [32m+[m[31m-[m
+ backend/src/controllers/department.controller.ts   | 202 [32m+++++[m[31m-------[m
+ backend/src/controllers/employee.controller.ts     | 202 [32m+++++[m[31m-------[m
+ backend/src/controllers/leave.controller.ts        | 365 [32m+++++++++[m[31m------------[m
+ backend/src/controllers/organization.controller.ts |  83 [32m++[m[31m---[m
+ backend/src/controllers/payroll.controller.ts      | 129 [32m+++[m[31m-----[m
+ backend/src/errors/ApiError.ts                     |  23 [32m++[m
+ backend/src/middleware/error.middleware.ts         | 103 [32m++++++[m
+ backend/src/utils/asyncHandler.ts                  |  11 [32m+[m
+ 11 files changed, 650 insertions(+), 759 deletions(-)

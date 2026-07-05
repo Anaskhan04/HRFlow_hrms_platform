@@ -1,5 +1,7 @@
 import { Prisma, Employee } from "@prisma/client";
-import employeeRepository from "../repositories/employee.repository";
+import employeeRepository, {
+  EmployeeQueryParams,
+} from "../repositories/employee.repository";
 import organizationRepository from "../repositories/organization.repository";
 
 class EmployeeService {
@@ -38,8 +40,8 @@ class EmployeeService {
     return employeeRepository.create(data);
   }
 
-  async getEmployees(): Promise<Employee[]> {
-    return employeeRepository.findAll();
+  async getEmployees(params: EmployeeQueryParams = {}) {
+    return employeeRepository.findManyWithPagination(params);
   }
 
   async getEmployeeById(id: string): Promise<Employee | null> {
