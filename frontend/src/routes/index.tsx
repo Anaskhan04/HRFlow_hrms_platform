@@ -1,8 +1,9 @@
 import React from "react";
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
-import AppLayout from "../layouts/AppLayout";
+import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import LoginPage from "../pages/LoginPage";
+import DashboardPage from "../pages/DashboardPage";
 import PlaceholderPage from "../pages/PlaceholderPage";
 
 const router = createBrowserRouter([
@@ -14,19 +15,13 @@ const router = createBrowserRouter([
     path: "/",
     element: (
       <ProtectedRoute>
-        <AppLayout />
+        <DashboardLayout />
       </ProtectedRoute>
     ),
     children: [
       {
         index: true,
-        element: (
-          <PlaceholderPage
-            title="Dashboard Overview"
-            moduleName="Dashboard Analytics"
-            description="High-level company metrics, active headcounts, leave summaries, and monthly payroll expenditure will be displayed here."
-          />
-        ),
+        element: <DashboardPage />,
       },
       {
         path: "employees",
@@ -34,7 +29,7 @@ const router = createBrowserRouter([
           <PlaceholderPage
             title="Employee Management"
             moduleName="Employee"
-            description="Comprehensive employee directory with pagination, advanced search across email/name/code, sorting, and department filtering."
+            description="Comprehensive employee directory with pagination, advanced search across email/name/code, sorting, and department filtering. Scheduled for upcoming sprint."
           />
         ),
       },
@@ -64,7 +59,7 @@ const router = createBrowserRouter([
           <PlaceholderPage
             title="Leave Management"
             moduleName="Leave Workflow"
-            description="Submit leave requests, review pending approvals, and track employee time-off balances."
+            description="Submit leave requests, review pending approvals, and track employee time-off balances. Scheduled for upcoming sprint."
           />
         ),
       },
