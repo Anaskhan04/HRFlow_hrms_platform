@@ -1,68 +1,53 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 
 import organizationService from "../services/organization.service";
 import { createOrganizationSchema } from "../validators/organization.validator";
+import { asyncHandler } from "../utils/asyncHandler";
 
 class OrganizationController {
-  async create(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const data = createOrganizationSchema.parse(req.body);
+  create = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const data = createOrganizationSchema.parse(req.body);
 
-      const organization =
-        await organizationService.createOrganization(data);
+    const organization = await organizationService.createOrganization(data);
 
-      res.status(201).json({
-        success: true,
-        message: "Organization created successfully.",
-        data: organization,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
- async getAll(req: Request, res: Response) {
-  console.log("Controller reached");
-
-  const data = await organizationService.getOrganizations();
-
-  console.log(data);
-
-  res.json({
-    success: true,
-    data,
+    res.status(201).json({
+      success: true,
+      message: "Organization created successfully.",
+      data: organization,
+    });
   });
-}
 
-  async getById(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const organization =
-        await organizationService.getOrganizationById(req.params.id as string);
+  getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    console.log("Controller reached");
 
-      if (!organization) {
-        res.status(404).json({
-          success: false,
-          message: "Organization not found.",
-        });
-        return;
-      }
+    const data = await organizationService.getOrganizations();
 
-      res.status(200).json({
-        success: true,
-        data: organization,
+    console.log(data);
+
+    res.json({
+      success: true,
+      data,
+    });
+  });
+
+  getById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const organization = await organizationService.getOrganizationById(
+      req.params.id as string
+    );
+
+    if (!organization) {
+      res.status(404).json({
+        success: false,
+        message: "Organization not found.",
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
+
+    res.status(200).json({
+      success: true,
+      data: organization,
+    });
+  });
 }
 
 export default new OrganizationController();

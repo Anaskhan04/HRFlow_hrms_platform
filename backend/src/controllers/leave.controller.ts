@@ -1,72 +1,59 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import leaveService from "../services/leave.service";
 import {
   createLeaveSchema,
   updateLeaveSchema,
 } from "../validators/leave.validator";
+import { asyncHandler } from "../utils/asyncHandler";
 
 class LeaveController {
-  async create(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const data = createLeaveSchema.parse(req.body);
+  create = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const data = createLeaveSchema.parse(req.body);
 
-      const leaveRequest = await leaveService.createLeaveRequest(data as any);
+    const leaveRequest = await leaveService.createLeaveRequest(data as any);
 
-      res.status(201).json({
-        success: true,
-        message: "Leave request created successfully.",
-        data: leaveRequest,
+    res.status(201).json({
+      success: true,
+      message: "Leave request created successfully.",
+      data: leaveRequest,
+    });
+  });
+
+  apply = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const employeeId = req.user?.employeeId || req.body.employeeId;
+    if (!employeeId) {
+      res.status(400).json({
+        success: false,
+        message: "Employee ID is required.",
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  async apply(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const employeeId = req.user?.employeeId || req.body.employeeId;
-      if (!employeeId) {
-        res.status(400).json({
-          success: false,
-          message: "Employee ID is required.",
-        });
-        return;
-      }
+    const bodyData = {
+      ...req.body,
+      employeeId,
+    };
 
-      const bodyData = {
-        ...req.body,
-        employeeId,
-      };
+    const data = createLeaveSchema.parse(bodyData);
 
-      const data = createLeaveSchema.parse(bodyData);
+    const leaveRequest = await leaveService.applyForLeave(
+      employeeId,
+      data as any
+    );
 
-      const leaveRequest = await leaveService.applyForLeave(employeeId, data as any);
+    res.status(201).json({
+      success: true,
+      message: "Leave applied successfully.",
+      data: leaveRequest,
+    });
+  });
 
-      res.status(201).json({
-        success: true,
-        message: "Leave applied successfully.",
-        data: leaveRequest,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getMyLeaves(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const employeeId = req.user?.employeeId || (req.query.employeeId as string) || req.body.employeeId;
+  getMyLeaves = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const employeeId =
+        req.user?.employeeId ||
+        (req.query.employeeId as string) ||
+        req.body.employeeId;
       if (!employeeId) {
         res.status(400).json({
           success: false,
@@ -81,108 +68,70 @@ class LeaveController {
         success: true,
         data: leaveRequests,
       });
-    } catch (error) {
-      next(error);
     }
-  }
+  );
 
-  async approve(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const approverId = req.user?.userId || req.user?.employeeId;
-      const leaveRequest = await leaveService.approveLeaveRequest(
-        req.params.id as string,
-        approverId
-      );
+  approve = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const approverId = req.user?.userId || req.user?.employeeId;
+    const leaveRequest = await leaveService.approveLeaveRequest(
+      req.params.id as string,
+      approverId
+    );
 
-      res.status(200).json({
-        success: true,
-        message: "Leave request approved successfully.",
-        data: leaveRequest,
+    res.status(200).json({
+      success: true,
+      message: "Leave request approved successfully.",
+      data: leaveRequest,
+    });
+  });
+
+  reject = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const approverId = req.user?.userId || req.user?.employeeId;
+    const leaveRequest = await leaveService.rejectLeaveRequest(
+      req.params.id as string,
+      approverId
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Leave request rejected successfully.",
+      data: leaveRequest,
+    });
+  });
+
+  cancel = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const employeeId = req.user?.employeeId || req.body.employeeId;
+    if (!employeeId) {
+      res.status(400).json({
+        success: false,
+        message: "Employee ID is required.",
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  async reject(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const approverId = req.user?.userId || req.user?.employeeId;
-      const leaveRequest = await leaveService.rejectLeaveRequest(
-        req.params.id as string,
-        approverId
-      );
+    const leaveRequest = await leaveService.cancelLeaveRequest(
+      req.params.id as string,
+      employeeId
+    );
 
-      res.status(200).json({
-        success: true,
-        message: "Leave request rejected successfully.",
-        data: leaveRequest,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+    res.status(200).json({
+      success: true,
+      message: "Leave request cancelled successfully.",
+      data: leaveRequest,
+    });
+  });
 
-  async cancel(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const employeeId = req.user?.employeeId || req.body.employeeId;
-      if (!employeeId) {
-        res.status(400).json({
-          success: false,
-          message: "Employee ID is required.",
-        });
-        return;
-      }
+  getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const leaveRequests = await leaveService.getLeaveRequests();
 
-      const leaveRequest = await leaveService.cancelLeaveRequest(
-        req.params.id as string,
-        employeeId
-      );
+    res.status(200).json({
+      success: true,
+      data: leaveRequests,
+    });
+  });
 
-      res.status(200).json({
-        success: true,
-        message: "Leave request cancelled successfully.",
-        data: leaveRequest,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getAll(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const leaveRequests = await leaveService.getLeaveRequests();
-
-      res.status(200).json({
-        success: true,
-        data: leaveRequests,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getById(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
+  getById = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const leaveRequest = await leaveService.getLeaveRequestById(
         req.params.id as string
       );
@@ -199,74 +148,56 @@ class LeaveController {
         success: true,
         data: leaveRequest,
       });
-    } catch (error) {
-      next(error);
     }
-  }
+  );
 
-  async update(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const existingLeaveRequest = await leaveService.getLeaveRequestById(
-        req.params.id as string
-      );
+  update = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const existingLeaveRequest = await leaveService.getLeaveRequestById(
+      req.params.id as string
+    );
 
-      if (!existingLeaveRequest) {
-        res.status(404).json({
-          success: false,
-          message: "Leave request not found.",
-        });
-        return;
-      }
-
-      const data = updateLeaveSchema.parse(req.body);
-
-      const leaveRequest = await leaveService.updateLeaveRequest(
-        req.params.id as string,
-        data as any
-      );
-
-      res.status(200).json({
-        success: true,
-        message: "Leave request updated successfully.",
-        data: leaveRequest,
+    if (!existingLeaveRequest) {
+      res.status(404).json({
+        success: false,
+        message: "Leave request not found.",
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  async delete(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const existingLeaveRequest = await leaveService.getLeaveRequestById(
-        req.params.id as string
-      );
+    const data = updateLeaveSchema.parse(req.body);
 
-      if (!existingLeaveRequest) {
-        res.status(404).json({
-          success: false,
-          message: "Leave request not found.",
-        });
-        return;
-      }
+    const leaveRequest = await leaveService.updateLeaveRequest(
+      req.params.id as string,
+      data as any
+    );
 
-      await leaveService.deleteLeaveRequest(req.params.id as string);
+    res.status(200).json({
+      success: true,
+      message: "Leave request updated successfully.",
+      data: leaveRequest,
+    });
+  });
 
-      res.status(200).json({
-        success: true,
-        message: "Leave request deleted successfully.",
+  delete = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const existingLeaveRequest = await leaveService.getLeaveRequestById(
+      req.params.id as string
+    );
+
+    if (!existingLeaveRequest) {
+      res.status(404).json({
+        success: false,
+        message: "Leave request not found.",
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
+
+    await leaveService.deleteLeaveRequest(req.params.id as string);
+
+    res.status(200).json({
+      success: true,
+      message: "Leave request deleted successfully.",
+    });
+  });
 }
 
 export default new LeaveController();

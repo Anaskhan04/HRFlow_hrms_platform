@@ -1,136 +1,100 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 
 import departmentService from "../services/department.service";
 import {
   createDepartmentSchema,
   updateDepartmentSchema,
 } from "../validators/department.validator";
+import { asyncHandler } from "../utils/asyncHandler";
 
 class DepartmentController {
-  async create(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const data = createDepartmentSchema.parse(req.body);
+  create = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const data = createDepartmentSchema.parse(req.body);
 
-      const department =
-        await departmentService.createDepartment(data);
+    const department = await departmentService.createDepartment(data);
 
-      res.status(201).json({
-        success: true,
-        message: "Department created successfully.",
-        data: department,
+    res.status(201).json({
+      success: true,
+      message: "Department created successfully.",
+      data: department,
+    });
+  });
+
+  getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const departments = await departmentService.getDepartments();
+
+    res.status(200).json({
+      success: true,
+      data: departments,
+    });
+  });
+
+  getById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const department = await departmentService.getDepartmentById(
+      req.params.id as string
+    );
+
+    if (!department) {
+      res.status(404).json({
+        success: false,
+        message: "Department not found.",
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  async getAll(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const departments =
-        await departmentService.getDepartments();
+    res.status(200).json({
+      success: true,
+      data: department,
+    });
+  });
 
-      res.status(200).json({
-        success: true,
-        data: departments,
+  update = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const existingDepartment = await departmentService.getDepartmentById(
+      req.params.id as string
+    );
+
+    if (!existingDepartment) {
+      res.status(404).json({
+        success: false,
+        message: "Department not found.",
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  async getById(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const department =
-        await departmentService.getDepartmentById(req.params.id as string);
+    const data = updateDepartmentSchema.parse(req.body);
 
-      if (!department) {
-        res.status(404).json({
-          success: false,
-          message: "Department not found.",
-        });
-        return;
-      }
+    const department = await departmentService.updateDepartment(
+      req.params.id as string,
+      data
+    );
 
-      res.status(200).json({
-        success: true,
-        data: department,
+    res.status(200).json({
+      success: true,
+      message: "Department updated successfully.",
+      data: department,
+    });
+  });
+
+  delete = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const existingDepartment = await departmentService.getDepartmentById(
+      req.params.id as string
+    );
+
+    if (!existingDepartment) {
+      res.status(404).json({
+        success: false,
+        message: "Department not found.",
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  async update(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const existingDepartment =
-        await departmentService.getDepartmentById(req.params.id as string);
+    await departmentService.deleteDepartment(req.params.id as string);
 
-      if (!existingDepartment) {
-        res.status(404).json({
-          success: false,
-          message: "Department not found.",
-        });
-        return;
-      }
-
-      const data = updateDepartmentSchema.parse(req.body);
-
-      const department =
-        await departmentService.updateDepartment(req.params.id as string, data);
-
-      res.status(200).json({
-        success: true,
-        message: "Department updated successfully.",
-        data: department,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async delete(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const existingDepartment =
-        await departmentService.getDepartmentById(req.params.id as string);
-
-      if (!existingDepartment) {
-        res.status(404).json({
-          success: false,
-          message: "Department not found.",
-        });
-        return;
-      }
-
-      await departmentService.deleteDepartment(req.params.id as string);
-
-      res.status(200).json({
-        success: true,
-        message: "Department deleted successfully.",
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+    res.status(200).json({
+      success: true,
+      message: "Department deleted successfully.",
+    });
+  });
 }
 
 export default new DepartmentController();
