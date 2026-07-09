@@ -8,6 +8,10 @@ import employeeRoutes from "./routes/employee.routes";
 import departmentRoutes from "./routes/department.routes";
 import authRoutes from "./routes/auth.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
+import leaveRoutes from "./routes/leave.routes";
+import attendanceRoutes from "./routes/attendance.routes";
+import payrollRoutes from "./routes/payroll.routes";
+import errorHandler from "./middleware/error.middleware";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./config/swagger";
 const app = express();
@@ -30,23 +34,11 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/organizations", organizationRoutes);
 app.use("/api/v1/employees", employeeRoutes);
 app.use("/api/v1/departments", departmentRoutes);
+app.use("/api/v1/leaves", leaveRoutes);
+app.use("/api/v1/attendance", attendanceRoutes);
+app.use("/api/v1/payroll", payrollRoutes);
 
 // Global Error Handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  if (err.name === 'ZodError') {
-    res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: err.errors,
-    });
-    return;
-  }
-
-  const statusCode = err.status || (err.message?.includes('not found') ? 404 : 400);
-  res.status(statusCode).json({
-    success: false,
-    message: err.message || 'Internal server error',
-  });
-});
+app.use(errorHandler);
 
 export default app;

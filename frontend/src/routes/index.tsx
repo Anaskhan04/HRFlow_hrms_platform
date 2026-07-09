@@ -5,6 +5,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import LoginPage from "../pages/LoginPage";
 import DashboardPage from "../pages/DashboardPage";
 import EmployeeListPage from "../pages/EmployeeListPage";
+import DepartmentListPage from "../pages/DepartmentListPage";
 import PlaceholderPage from "../pages/PlaceholderPage";
 
 const router = createBrowserRouter([
@@ -40,13 +41,7 @@ const router = createBrowserRouter([
       },
       {
         path: "departments",
-        element: (
-          <PlaceholderPage
-            title="Department Hierarchy"
-            moduleName="Department"
-            description="Organize corporate structure, department heads, budgets, and operational teams."
-          />
-        ),
+        element: <DepartmentListPage />,
       },
       {
         path: "leaves",
