@@ -4,6 +4,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import LoginPage from "../pages/LoginPage";
 import DashboardPage from "../pages/DashboardPage";
+import EmployeeListPage from "../pages/EmployeeListPage";
 import PlaceholderPage from "../pages/PlaceholderPage";
 
 const router = createBrowserRouter([
@@ -25,13 +26,7 @@ const router = createBrowserRouter([
       },
       {
         path: "employees",
-        element: (
-          <PlaceholderPage
-            title="Employee Management"
-            moduleName="Employee"
-            description="Comprehensive employee directory with pagination, advanced search across email/name/code, sorting, and department filtering. Scheduled for upcoming sprint."
-          />
-        ),
+        element: <EmployeeListPage />,
       },
       {
         path: "organizations",
