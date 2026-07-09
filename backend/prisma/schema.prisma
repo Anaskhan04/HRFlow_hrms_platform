@@ -8,41 +8,6 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
-enum Role {
-  ADMIN
-  HR
-  MANAGER
-  EMPLOYEE
-}
-
-enum EmployeeStatus {
-  ACTIVE
-  INACTIVE
-  ON_LEAVE
-  TERMINATED
-}
-
-enum LeaveStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  CANCELLED
-}
-
-enum AttendanceStatus {
-  PRESENT
-  ABSENT
-  LATE
-  HALF_DAY
-  ON_LEAVE
-}
-
-enum PayrollStatus {
-  PENDING
-  GENERATED
-  PAID
-}
-
 model Organization {
   id          String       @id @default(uuid())
   name        String
@@ -61,7 +26,6 @@ model Organization {
   updatedAt   DateTime     @updatedAt
   departments Department[]
   employees   Employee[]
-  leaveTypes  LeaveType[]
 }
 
 model Employee {
@@ -82,9 +46,6 @@ model Employee {
   department     Department?    @relation(fields: [departmentId], references: [id])
   organization   Organization   @relation(fields: [organizationId], references: [id])
   user           User?
-  leaveRequests  LeaveRequest[]
-  attendances    Attendance[]
-  payrolls       Payroll[]
 }
 
 model Department {
@@ -112,65 +73,16 @@ model User {
   employee   Employee @relation(fields: [employeeId], references: [id])
 }
 
-model LeaveType {
-  id             String         @id @default(uuid())
-  name           String
-  description    String?
-  organizationId String
-  organization   Organization   @relation(fields: [organizationId], references: [id])
-  leaveRequests  LeaveRequest[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-
-  @@unique([organizationId, name])
+enum Role {
+  ADMIN
+  HR
+  MANAGER
+  EMPLOYEE
 }
 
-model LeaveRequest {
-  id          String      @id @default(uuid())
-  employeeId  String
-  employee    Employee    @relation(fields: [employeeId], references: [id])
-  leaveTypeId String
-  leaveType   LeaveType   @relation(fields: [leaveTypeId], references: [id])
-  startDate   DateTime
-  endDate     DateTime
-  reason      String
-  status      LeaveStatus @default(PENDING)
-  approvedBy  String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-}
-
-model Attendance {
-  id           String           @id @default(uuid())
-  employeeId   String
-  employee     Employee         @relation(fields: [employeeId], references: [id])
-  date         DateTime
-  checkIn      DateTime?
-  checkOut     DateTime?
-  workingHours Float?
-  status       AttendanceStatus @default(PRESENT)
-  remarks      String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-
-  @@unique([employeeId, date])
-}
-
-model Payroll {
-  id          String        @id @default(uuid())
-  employeeId  String
-  employee    Employee      @relation(fields: [employeeId], references: [id])
-  month       Int
-  year        Int
-  basicSalary Float
-  allowances  Float         @default(0)
-  deductions  Float         @default(0)
-  netSalary   Float
-  status      PayrollStatus @default(PENDING)
-  generatedAt DateTime?
-  paidAt      DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  @@unique([employeeId, month, year])
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+  TERMINATED
 }
