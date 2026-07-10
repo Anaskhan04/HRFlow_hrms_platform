@@ -12,6 +12,7 @@ router.get("/", leaveController.getAll);
 
 router.post("/apply", leaveController.apply);
 
+router.get("/types", leaveController.getTypes);
 router.get("/my-leaves", leaveController.getMyLeaves);
 
 router.patch("/:id/approve", leaveController.approve);

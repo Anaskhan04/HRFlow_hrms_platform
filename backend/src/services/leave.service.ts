@@ -50,6 +50,10 @@ class LeaveService {
     return leaveRepository.findAll();
   }
 
+  async getLeaveTypes() {
+    return leaveRepository.findAllLeaveTypes();
+  }
+
   async getLeaveRequestById(id: string): Promise<LeaveRequest | null> {
     return leaveRepository.findById(id);
   }

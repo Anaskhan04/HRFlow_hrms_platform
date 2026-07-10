@@ -6,6 +6,7 @@ import LoginPage from "../pages/LoginPage";
 import DashboardPage from "../pages/DashboardPage";
 import EmployeeListPage from "../pages/EmployeeListPage";
 import DepartmentListPage from "../pages/DepartmentListPage";
+import LeaveListPage from "../pages/LeaveListPage";
 import PlaceholderPage from "../pages/PlaceholderPage";
 
 const router = createBrowserRouter([
@@ -45,13 +46,7 @@ const router = createBrowserRouter([
       },
       {
         path: "leaves",
-        element: (
-          <PlaceholderPage
-            title="Leave Management"
-            moduleName="Leave Workflow"
-            description="Submit leave requests, review pending approvals, and track employee time-off balances. Scheduled for upcoming sprint."
-          />
-        ),
+        element: <LeaveListPage />,
       },
       {
         path: "attendance",

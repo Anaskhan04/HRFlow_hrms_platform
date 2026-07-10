@@ -68,6 +68,12 @@ class LeaveRepository {
     });
   }
 
+  async findAllLeaveTypes(): Promise<LeaveType[]> {
+    return prisma.leaveType.findMany({
+      orderBy: { name: "asc" },
+    });
+  }
+
   async findEmployeeById(id: string): Promise<Employee | null> {
     return employeeRepository.findById(id);
   }

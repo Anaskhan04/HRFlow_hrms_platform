@@ -130,6 +130,15 @@ class LeaveController {
     });
   });
 
+  getTypes = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const leaveTypes = await leaveService.getLeaveTypes();
+
+    res.status(200).json({
+      success: true,
+      data: leaveTypes,
+    });
+  });
+
   getById = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
       const leaveRequest = await leaveService.getLeaveRequestById(
