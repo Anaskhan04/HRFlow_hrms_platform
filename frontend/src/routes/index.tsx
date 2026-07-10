@@ -7,6 +7,7 @@ import DashboardPage from "../pages/DashboardPage";
 import EmployeeListPage from "../pages/EmployeeListPage";
 import DepartmentListPage from "../pages/DepartmentListPage";
 import LeaveListPage from "../pages/LeaveListPage";
+import { AttendanceListPage } from "../pages/AttendanceListPage";
 import PlaceholderPage from "../pages/PlaceholderPage";
 
 const router = createBrowserRouter([
@@ -50,13 +51,7 @@ const router = createBrowserRouter([
       },
       {
         path: "attendance",
-        element: (
-          <PlaceholderPage
-            title="Attendance Tracking"
-            moduleName="Attendance"
-            description="Daily employee check-in and check-out logs, automated working hour calculations, and historical records."
-          />
-        ),
+        element: <AttendanceListPage />,
       },
       {
         path: "payroll",

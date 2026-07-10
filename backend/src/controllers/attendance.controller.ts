@@ -100,6 +100,29 @@ class AttendanceController {
       data: history,
     });
   });
+
+  getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+    const search = req.query.search as string;
+    const status = req.query.status as any;
+    const date = req.query.date as string;
+    const employeeId = req.query.employeeId as string;
+
+    const result = await attendanceService.getAllAttendance({
+      page,
+      limit,
+      search,
+      status,
+      date,
+      employeeId,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  });
 }
 
 export default new AttendanceController();

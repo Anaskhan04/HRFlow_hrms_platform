@@ -76,6 +76,47 @@ class AttendanceService {
   async getAttendanceHistory(employeeId: string): Promise<Attendance[]> {
     return attendanceRepository.findByEmployeeId(employeeId);
   }
+
+  async getAllAttendance(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: AttendanceStatus;
+    date?: string;
+    employeeId?: string;
+  }): Promise<{
+    attendance: Attendance[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const page = Math.max(1, params.page || 1);
+    const limit = Math.max(1, Math.min(100, params.limit || 10));
+    const skip = (page - 1) * limit;
+    const dateObj = params.date ? new Date(params.date) : undefined;
+
+    const { attendance, total } = await attendanceRepository.findAll({
+      skip,
+      take: limit,
+      search: params.search,
+      status: params.status,
+      date: dateObj && !isNaN(dateObj.getTime()) ? dateObj : undefined,
+      employeeId: params.employeeId,
+    });
+
+    return {
+      attendance,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
 }
 
 export default new AttendanceService();
