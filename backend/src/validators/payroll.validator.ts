@@ -23,3 +23,15 @@ export const generatePayrollSchema = z.object({
 });
 
 export type GeneratePayrollInput = z.infer<typeof generatePayrollSchema>;
+
+export const updatePayrollSchema = z.object({
+  basicSalary: z.coerce.number().nonnegative("Basic salary cannot be negative").optional(),
+  allowances: z.coerce.number().nonnegative("Allowances cannot be negative").optional(),
+  deductions: z.coerce.number().nonnegative("Deductions cannot be negative").optional(),
+  status: z.enum(["PENDING", "GENERATED", "PAID"]).optional(),
+  month: z.coerce.number().int().min(1).max(12).optional(),
+  year: z.coerce.number().int().min(2000).optional(),
+});
+
+export type UpdatePayrollInput = z.infer<typeof updatePayrollSchema>;
+

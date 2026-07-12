@@ -51,11 +51,101 @@ class PayrollService {
     return payrollRepository.findAll();
   }
 
+  async getAllPayrolls(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    month?: number;
+    year?: number;
+    status?: any;
+    employeeId?: string;
+    sort?: string;
+    order?: string;
+  }): Promise<{
+    payrolls: Payroll[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const page = params.page || 1;
+    const limit = params.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const { payrolls, total } = await payrollRepository.findAllPaginated({
+      skip,
+      take: limit,
+      search: params.search,
+      month: params.month,
+      year: params.year,
+      status: params.status,
+      employeeId: params.employeeId,
+      sort: params.sort,
+      order: params.order,
+    });
+
+
+    return {
+      payrolls,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
   async getPayrollById(id: string): Promise<Payroll | null> {
     return payrollRepository.findById(id);
   }
 
+  async updatePayroll(
+    id: string,
+    data: {
+      basicSalary?: number;
+      allowances?: number;
+      deductions?: number;
+      status?: PayrollStatus;
+      month?: number;
+      year?: number;
+    }
+  ): Promise<Payroll> {
+    const payroll = await payrollRepository.findById(id);
+    if (!payroll) {
+      throw new Error("Payroll not found.");
+    }
+
+    const basicSalary = data.basicSalary ?? payroll.basicSalary;
+    const allowances = data.allowances ?? payroll.allowances;
+    const deductions = data.deductions ?? payroll.deductions;
+    const netSalary = parseFloat((basicSalary + allowances - deductions).toFixed(2));
+
+    const updateData: any = {
+      basicSalary,
+      allowances,
+      deductions,
+      netSalary,
+    };
+    if (data.status) updateData.status = data.status;
+    if (data.month) updateData.month = data.month;
+    if (data.year) updateData.year = data.year;
+
+    return payrollRepository.update(id, updateData);
+  }
+
+  async deletePayroll(id: string): Promise<Payroll> {
+    const payroll = await payrollRepository.findById(id);
+    if (!payroll) {
+      throw new Error("Payroll not found.");
+    }
+    return payrollRepository.delete(id);
+  }
+
   async payPayroll(id: string): Promise<Payroll> {
+
     const payroll = await payrollRepository.findById(id);
     if (!payroll) {
       throw new Error("Payroll not found.");

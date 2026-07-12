@@ -17,11 +17,54 @@ class PayrollController {
   });
 
   getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const payrolls = await payrollService.getPayrolls();
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+    const search = req.query.search as string;
+    const month = req.query.month && req.query.month !== "ALL" ? parseInt(req.query.month as string, 10) : undefined;
+    const year = req.query.year && req.query.year !== "ALL" ? parseInt(req.query.year as string, 10) : undefined;
+    const status = req.query.status as any;
+    const employeeId = req.query.employeeId as string;
+    const sort = req.query.sort as string;
+    const order = req.query.order as string;
+
+    const result = await payrollService.getAllPayrolls({
+      page,
+      limit,
+      search,
+      month,
+      year,
+      status,
+      employeeId,
+      sort,
+      order,
+    });
+
 
     res.status(200).json({
       success: true,
-      data: payrolls,
+      data: result,
+    });
+  });
+
+  update = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const payroll = await payrollService.updatePayroll(
+      req.params.id as string,
+      req.body
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Payroll updated successfully.",
+      data: payroll,
+    });
+  });
+
+  delete = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    await payrollService.deletePayroll(req.params.id as string);
+
+    res.status(200).json({
+      success: true,
+      message: "Payroll deleted successfully.",
     });
   });
 

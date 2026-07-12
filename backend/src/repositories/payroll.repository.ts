@@ -71,6 +71,86 @@ class PayrollRepository {
   async findEmployeeById(id: string): Promise<Employee | null> {
     return employeeRepository.findById(id);
   }
+
+  async findAllPaginated(params: {
+    skip?: number;
+    take?: number;
+    search?: string;
+    month?: number;
+    year?: number;
+    status?: any;
+    employeeId?: string;
+  }): Promise<{ payrolls: Payroll[]; total: number }> {
+    const where: Prisma.PayrollWhereInput = {};
+    if (params.employeeId) {
+      where.employeeId = params.employeeId;
+    }
+    if (params.month !== undefined && !isNaN(params.month)) {
+      where.month = params.month;
+    }
+    if (params.year !== undefined && !isNaN(params.year)) {
+      where.year = params.year;
+    }
+    if (params.status && params.status !== "ALL") {
+      where.status = params.status;
+    }
+    if (params.search) {
+      where.employee = {
+        OR: [
+          { firstName: { contains: params.search, mode: "insensitive" } },
+          { lastName: { contains: params.search, mode: "insensitive" } },
+          { employeeCode: { contains: params.search, mode: "insensitive" } },
+          { email: { contains: params.search, mode: "insensitive" } },
+        ],
+      };
+    }
+
+    let orderBy: any = [
+      { year: "desc" },
+      { month: "desc" },
+      { createdAt: "desc" },
+    ];
+    if (params.sort) {
+      const order = params.order === "asc" ? "asc" : "desc";
+      if (params.sort === "netSalary") {
+        orderBy = { netSalary: order };
+      } else if (params.sort === "month" || params.sort === "yearMonth") {
+        orderBy = [{ year: order }, { month: order }];
+      } else if (params.sort === "status") {
+        orderBy = { status: order };
+      } else if (params.sort === "employeeName") {
+        orderBy = { employee: { firstName: order } };
+      } else if (params.sort === "createdAt") {
+        orderBy = { createdAt: order };
+      }
+    }
+
+    const [payrolls, total] = await Promise.all([
+      prisma.payroll.findMany({
+        where,
+        skip: params.skip,
+        take: params.take,
+        orderBy,
+        include: {
+          employee: true,
+        },
+      }),
+      prisma.payroll.count({ where }),
+    ]);
+
+    return { payrolls, total };
+
+  }
+
+  async delete(id: string): Promise<Payroll> {
+    return prisma.payroll.delete({
+      where: { id },
+      include: {
+        employee: true,
+      },
+    });
+  }
 }
 
 export default new PayrollRepository();
+

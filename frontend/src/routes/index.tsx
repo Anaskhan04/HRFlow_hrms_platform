@@ -8,7 +8,9 @@ import EmployeeListPage from "../pages/EmployeeListPage";
 import DepartmentListPage from "../pages/DepartmentListPage";
 import LeaveListPage from "../pages/LeaveListPage";
 import { AttendanceListPage } from "../pages/AttendanceListPage";
+import { PayrollListPage } from "../pages/PayrollListPage";
 import PlaceholderPage from "../pages/PlaceholderPage";
+
 
 const router = createBrowserRouter([
   {
@@ -55,14 +57,9 @@ const router = createBrowserRouter([
       },
       {
         path: "payroll",
-        element: (
-          <PlaceholderPage
-            title="Payroll Processing"
-            moduleName="Payroll"
-            description="Generate monthly salary slips, calculate net pay with allowances and deductions, and process payments."
-          />
-        ),
+        element: <PayrollListPage />,
       },
+
       {
         path: "settings",
         element: (
