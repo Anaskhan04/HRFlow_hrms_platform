@@ -9,6 +9,7 @@ import DepartmentListPage from "../pages/DepartmentListPage";
 import LeaveListPage from "../pages/LeaveListPage";
 import { AttendanceListPage } from "../pages/AttendanceListPage";
 import { PayrollListPage } from "../pages/PayrollListPage";
+import { ProfilePage } from "../pages/ProfilePage";
 import PlaceholderPage from "../pages/PlaceholderPage";
 
 
@@ -59,16 +60,13 @@ const router = createBrowserRouter([
         path: "payroll",
         element: <PayrollListPage />,
       },
-
+      {
+        path: "profile",
+        element: <ProfilePage />,
+      },
       {
         path: "settings",
-        element: (
-          <PlaceholderPage
-            title="System Settings"
-            moduleName="Enterprise Settings"
-            description="Configure security policies, role permissions, notification preferences, and API integrations."
-          />
-        ),
+        element: <ProfilePage />,
       },
       {
         path: "*",
@@ -77,6 +75,7 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
 
 export const AppRouter: React.FC = () => {
   return <RouterProvider router={router} />;

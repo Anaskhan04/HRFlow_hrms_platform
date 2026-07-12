@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import {
@@ -81,18 +82,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
 
         {/* User Profile */}
         <div className="flex items-center gap-3 pl-1">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold border border-primary/20">
-            {user?.email ? user.email[0].toUpperCase() : <UserIcon className="h-4 w-4" />}
-          </div>
-          <div className="hidden flex-col md:flex">
-            <span className="text-sm font-medium leading-none text-foreground">
-              {user?.email || "Admin User"}
-            </span>
-            <span className="flex items-center gap-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase mt-1">
-              <Shield className="h-3 w-3 text-primary inline" />
-              {user?.role || "ADMIN"}
-            </span>
-          </div>
+          <Link
+            to="/profile"
+            className="flex items-center gap-3 rounded-full hover:opacity-80 transition-opacity"
+            title="View Profile & Settings"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold border border-primary/20">
+              {user?.email ? user.email[0].toUpperCase() : <UserIcon className="h-4 w-4" />}
+            </div>
+            <div className="hidden flex-col md:flex">
+              <span className="text-sm font-medium leading-none text-foreground">
+                {user?.email || "Admin User"}
+              </span>
+              <span className="flex items-center gap-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase mt-1">
+                <Shield className="h-3 w-3 text-primary inline" />
+                {user?.role || "ADMIN"}
+              </span>
+            </div>
+          </Link>
           <Button
             variant="ghost"
             size="icon"
@@ -103,6 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
+
       </div>
     </header>
   );

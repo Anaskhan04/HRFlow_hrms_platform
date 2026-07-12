@@ -4,13 +4,58 @@ import authRepository from "../repositories/auth.repository";
 import employeeRepository from "../repositories/employee.repository";
 import { hashPassword, comparePassword } from "../utils/password";
 import { generateToken } from "../utils/jwt";
-import { RegisterInput, LoginInput } from "../validators/auth.validator";
+import { RegisterInput, LoginInput, UpdateProfileInput, ChangePasswordInput } from "../validators/auth.validator";
 type UserWithoutPassword = Omit<User, "password">;
 
 class AuthService {
   private excludePassword(user: User): UserWithoutPassword {
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
+  }
+
+  async getMe(userId: string): Promise<UserWithoutPassword> {
+    const user = await authRepository.findById(userId);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+    return this.excludePassword(user);
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileInput): Promise<UserWithoutPassword> {
+    const user = await authRepository.findById(userId);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+
+    if (user.employeeId) {
+      await employeeRepository.update(user.employeeId, {
+        ...(data.firstName && { firstName: data.firstName }),
+        ...(data.lastName && { lastName: data.lastName }),
+        ...(data.phone !== undefined && { phone: data.phone }),
+        ...(data.designation && { designation: data.designation }),
+      });
+    }
+
+    const updatedUser = await authRepository.findById(userId);
+    if (!updatedUser) {
+      throw new Error("User not found after update.");
+    }
+    return this.excludePassword(updatedUser);
+  }
+
+  async changePassword(userId: string, data: ChangePasswordInput): Promise<void> {
+    const user = await authRepository.findById(userId);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+
+    const isPasswordValid = await comparePassword(data.currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new Error("Current password is incorrect.");
+    }
+
+    const hashedPassword = await hashPassword(data.newPassword);
+    await authRepository.updatePassword(userId, hashedPassword);
   }
 
   async register(data: RegisterInput): Promise<{ user: UserWithoutPassword; token: string }> {

@@ -9,6 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
+  updateUser: (newUser: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +29,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(storedToken);
     }
     setIsLoading(false);
+  }, []);
+
+  const updateUser = useCallback((newUser: User) => {
+    localStorage.setItem("hrflow_user", JSON.stringify(newUser));
+    setUser(newUser);
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
@@ -62,7 +68,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     login,
     logout,
+    updateUser,
   };
+
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -80,7 +80,10 @@ class PayrollRepository {
     year?: number;
     status?: any;
     employeeId?: string;
+    sort?: string;
+    order?: string;
   }): Promise<{ payrolls: Payroll[]; total: number }> {
+
     const where: Prisma.PayrollWhereInput = {};
     if (params.employeeId) {
       where.employeeId = params.employeeId;

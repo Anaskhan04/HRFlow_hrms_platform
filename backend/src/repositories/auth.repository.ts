@@ -28,7 +28,21 @@ async findByEmailWithPassword(email: string): Promise<User | null> {
     return prisma.user.findUnique({
       where: { id },
       include: {
-        employee: true,
+        employee: {
+          include: {
+            department: true,
+            organization: true,
+          },
+        },
+      },
+    });
+  }
+
+  async updatePassword(id: string, hashedPassword: string): Promise<User> {
+    return prisma.user.update({
+      where: { id },
+      data: {
+        password: hashedPassword,
       },
     });
   }
@@ -41,3 +55,4 @@ async findByEmailWithPassword(email: string): Promise<User | null> {
 }
 
 export default new AuthRepository();
+
