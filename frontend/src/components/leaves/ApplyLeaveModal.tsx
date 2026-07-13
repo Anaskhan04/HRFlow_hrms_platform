@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,12 +19,12 @@ const applyLeaveSchema = z
     reason: z
       .string()
       .min(5, "Reason must be at least 5 characters")
-      .max(500, "Reason must be under 500 characters"),
+      .max(500, "Reason must not exceed 500 characters"),
   })
   .refine(
     (data) => {
       if (!data.startDate || !data.endDate) return true;
-      return new Date(data.startDate) <= new Date(data.endDate);
+      return new Date(data.endDate) >= new Date(data.startDate);
     },
     {
       message: "End date cannot be earlier than start date",
@@ -47,7 +47,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   const { data: leaveTypes = [] } = useLeaveTypes();
   const applyMutation = useApplyLeave();
 
-  const employees = employeesData?.employees || [];
+  const employees = useMemo(() => employeesData?.employees || [], [employeesData?.employees]);
 
   const {
     register,

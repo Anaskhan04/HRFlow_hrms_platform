@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { AlertCircle, Calculator } from "lucide-react";
 import { Modal } from "../ui/modal";
 
@@ -32,7 +32,7 @@ export const GeneratePayrollModal: React.FC<GeneratePayrollModalProps> = ({
   onClose,
 }) => {
   const { data: employeesData } = useEmployees({ limit: 100 });
-  const employees = employeesData?.employees || [];
+  const employees = useMemo(() => employeesData?.employees || [], [employeesData?.employees]);
   const generateMutation = useGeneratePayroll();
 
   const now = new Date();
