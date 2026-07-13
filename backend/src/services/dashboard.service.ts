@@ -15,6 +15,11 @@ class DashboardService {
 
     return dashboardRepository.getSummaryStats(today, now, month, year);
   }
+
+  async getAnalytics() {
+    return dashboardRepository.getAnalyticsStats();
+  }
 }
 
 export default new DashboardService();
+

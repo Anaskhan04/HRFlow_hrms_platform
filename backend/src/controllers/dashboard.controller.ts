@@ -12,6 +12,17 @@ class DashboardController {
       ...summary,
     });
   });
+
+  getAnalytics = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const analytics = await dashboardService.getAnalytics();
+
+    res.status(200).json({
+      success: true,
+      data: analytics,
+      ...analytics,
+    });
+  });
 }
 
 export default new DashboardController();
+

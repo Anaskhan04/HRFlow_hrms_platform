@@ -8,5 +8,8 @@ router.use(authenticate);
 
 router.get("/summary", dashboardController.getSummary);
 router.get("/dashboard/summary", dashboardController.getSummary);
+router.get("/analytics", dashboardController.getAnalytics);
+router.get("/dashboard/analytics", dashboardController.getAnalytics);
 
 export default router;
+

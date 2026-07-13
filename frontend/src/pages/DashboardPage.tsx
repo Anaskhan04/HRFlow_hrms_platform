@@ -1,6 +1,7 @@
 import React from "react";
 import { useDashboardSummary } from "../hooks/useDashboard";
 import { useAuth } from "../hooks/useAuth";
+import { DashboardAnalyticsSection } from "../components/dashboard/DashboardAnalyticsSection";
 import {
   Users,
   Building2,
@@ -17,6 +18,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../utils/cn";
+
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -193,13 +195,16 @@ export const DashboardPage: React.FC = () => {
             })}
       </div>
 
+      {/* Dashboard Interactive Analytics Section (Recharts) */}
+      <DashboardAnalyticsSection />
+
       {/* Quick Action & System Health Panel */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="bg-card/80 backdrop-blur-sm border shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-bold flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-              <span>Sprint 14 Architecture Health</span>
+              <span>Enterprise Architecture Health</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
@@ -214,8 +219,8 @@ export const DashboardPage: React.FC = () => {
               <span className="font-semibold text-foreground">2 Minutes</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Backend API Connection</span>
-              <span className="font-semibold text-foreground">/api/v1/dashboard/summary</span>
+              <span>Analytics API Connection</span>
+              <span className="font-semibold text-foreground">/api/v1/dashboard/analytics</span>
             </div>
           </CardContent>
         </Card>
@@ -224,21 +229,21 @@ export const DashboardPage: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-lg font-bold flex items-center gap-2">
               <Clock className="h-5 w-5 text-primary" />
-              <span>Next Phase Previews</span>
+              <span>Completed Core Modules</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-center justify-between border-b pb-2">
-              <span>Employee Management Directory</span>
-              <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-muted-foreground">Pending Sprint</span>
+              <span>Employees & Departments Directory</span>
+              <span className="text-xs font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Completed</span>
             </div>
             <div className="flex items-center justify-between border-b pb-2">
-              <span>Leave Application Workflow</span>
-              <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-muted-foreground">Pending Sprint</span>
+              <span>Leave, Attendance & Payroll Management</span>
+              <span className="text-xs font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Completed</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Automated Attendance Check-in</span>
-              <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-muted-foreground">Pending Sprint</span>
+              <span>Profile, Settings & Recharts Analytics</span>
+              <span className="text-xs font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Completed</span>
             </div>
           </CardContent>
         </Card>
@@ -248,3 +253,4 @@ export const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
+
