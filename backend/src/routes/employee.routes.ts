@@ -3,19 +3,21 @@ import { Role } from "@prisma/client";
 
 import employeeController from "../controllers/employee.controller";
 import authenticate from "../middleware/auth.middleware";
-import authorize from "../middleware/role.middleware";
+import authorizeRole from "../middleware/role.middleware";
 const router = Router();
 
-router.post("/", employeeController.create);
+router.use(authenticate);
+
+router.post("/", authorizeRole(Role.ADMIN, Role.HR), employeeController.create);
 
 router.get("/", employeeController.getAll);
 
 router.get("/:id", employeeController.getById);
 
-router.put("/:id", employeeController.update);
+router.put("/:id", authorizeRole(Role.ADMIN, Role.HR), employeeController.update);
 
-router.patch("/:id", employeeController.update);
+router.patch("/:id", authorizeRole(Role.ADMIN, Role.HR), employeeController.update);
 
-router.delete("/:id", employeeController.delete);
+router.delete("/:id", authorizeRole(Role.ADMIN, Role.HR), employeeController.delete);
 
 export default router;

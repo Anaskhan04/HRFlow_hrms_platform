@@ -11,6 +11,8 @@ import { AttendanceListPage } from "../pages/AttendanceListPage";
 import { PayrollListPage } from "../pages/PayrollListPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import PlaceholderPage from "../pages/PlaceholderPage";
+import OrganizationSetupPage from "../pages/OrganizationSetupPage";
+
 
 
 const router = createBrowserRouter([
@@ -36,13 +38,7 @@ const router = createBrowserRouter([
       },
       {
         path: "organizations",
-        element: (
-          <PlaceholderPage
-            title="Organization Setup"
-            moduleName="Organization"
-            description="Manage global entities, multi-branch setups, timezone settings, and corporate configurations."
-          />
-        ),
+        element: <OrganizationSetupPage />,
       },
       {
         path: "departments",

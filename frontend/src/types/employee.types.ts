@@ -12,6 +12,15 @@ export interface Organization {
   name: string;
   slug?: string;
   email?: string;
+  phone?: string | null;
+  website?: string | null;
+  logoUrl?: string | null;
+  address?: string | null;
+  country?: string;
+  description?: string | null;
+  timezone?: string;
+  industry?: string | null;
+  isActive?: boolean;
 }
 
 export interface Employee {

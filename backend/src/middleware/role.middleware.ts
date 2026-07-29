@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { Role } from "@prisma/client";
 
-export const authorize = (...allowedRoles: Role[]) => {
+export const authorizeRole = (...allowedRoles: Role[]) => {
     return (req: Request, res: Response, next: NextFunction): void => {
     const user = req.user;
 
@@ -25,4 +25,4 @@ export const authorize = (...allowedRoles: Role[]) => {
   };
 };
 
-export default authorize;
+export default authorizeRole;
