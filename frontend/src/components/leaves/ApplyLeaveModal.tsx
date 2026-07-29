@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Modal } from "../ui/modal";
@@ -7,8 +7,8 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { useEmployees } from "../../hooks/useEmployees";
-import { useLeaveTypes, useApplyLeave } from "../../hooks/useLeaves";
-import { Calendar, User, FileText, AlertCircle } from "lucide-react";
+import { useLeaveTypes, useApplyLeave, useLeaveBalances } from "../../hooks/useLeaves";
+import { Calendar, User, FileText, AlertCircle, Wallet } from "lucide-react";
 
 const applyLeaveSchema = z
   .object({
@@ -34,6 +34,16 @@ const applyLeaveSchema = z
 
 type ApplyLeaveFormValues = z.infer<typeof applyLeaveSchema>;
 
+/** Calculate number of calendar days (inclusive) between two date strings. */
+function calcLeaveDays(startDate: string, endDate: string): number {
+  if (!startDate || !endDate) return 0;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return 0;
+  const diffMs = Math.abs(end.getTime() - start.getTime());
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1;
+}
+
 interface ApplyLeaveModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -53,6 +63,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<ApplyLeaveFormValues>({
     resolver: zodResolver(applyLeaveSchema),
@@ -64,6 +75,36 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       reason: "",
     },
   });
+
+  // Watch relevant fields for live balance calculation
+  const watchedEmployeeId = useWatch({ control, name: "employeeId" });
+  const watchedLeaveTypeId = useWatch({ control, name: "leaveTypeId" });
+  const watchedStartDate = useWatch({ control, name: "startDate" });
+  const watchedEndDate = useWatch({ control, name: "endDate" });
+
+  // Fetch leave balances for the selected employee
+  const { data: balances = [] } = useLeaveBalances(watchedEmployeeId);
+
+  // Find balance for the selected leave type
+  const selectedBalance = useMemo(
+    () => balances.find((b: any) => b.leaveTypeId === watchedLeaveTypeId) ?? null,
+    [balances, watchedLeaveTypeId]
+  );
+
+  // Calculate requested days live
+  const requestedDays = useMemo(
+    () => calcLeaveDays(watchedStartDate, watchedEndDate),
+    [watchedStartDate, watchedEndDate]
+  );
+
+  const hasInsufficientBalance =
+    selectedBalance !== null &&
+    watchedLeaveTypeId &&
+    requestedDays > 0 &&
+    requestedDays > selectedBalance.balance;
+
+  const balanceUnknown =
+    watchedEmployeeId && watchedLeaveTypeId && selectedBalance === null;
 
   useEffect(() => {
     if (isOpen) {
@@ -136,12 +177,32 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
           )}
         </div>
 
-        {/* Leave Type Selector */}
+        {/* Leave Type Selector + Balance badge */}
         <div className="space-y-1.5">
-          <Label htmlFor="leaveTypeId" className="flex items-center gap-1.5 text-xs font-semibold">
-            <Calendar className="h-3.5 w-3.5 text-indigo-500" />
-            Leave Type <span className="text-rose-500">*</span>
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="leaveTypeId" className="flex items-center gap-1.5 text-xs font-semibold">
+              <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+              Leave Type <span className="text-rose-500">*</span>
+            </Label>
+            {watchedEmployeeId && watchedLeaveTypeId && (
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
+                  selectedBalance === null
+                    ? "bg-slate-100 text-slate-500 border-slate-200"
+                    : selectedBalance.balance <= 0
+                    ? "bg-rose-50 text-rose-600 border-rose-200"
+                    : selectedBalance.balance <= 3
+                    ? "bg-amber-50 text-amber-600 border-amber-200"
+                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                }`}
+              >
+                <Wallet className="h-3 w-3" />
+                {selectedBalance === null
+                  ? "Balance: N/A"
+                  : `${selectedBalance.balance} day${selectedBalance.balance !== 1 ? "s" : ""} available`}
+              </span>
+            )}
+          </div>
           <select
             id="leaveTypeId"
             {...register("leaveTypeId")}
@@ -182,6 +243,28 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
           </div>
         </div>
 
+        {/* Live day count + balance check */}
+        {requestedDays > 0 && watchedLeaveTypeId && watchedEmployeeId && (
+          <div
+            className={`rounded-lg border p-3 text-xs flex items-center gap-2 ${
+              hasInsufficientBalance
+                ? "bg-rose-50 border-rose-300 text-rose-700"
+                : balanceUnknown
+                ? "bg-amber-50 border-amber-300 text-amber-700"
+                : "bg-indigo-50 border-indigo-200 text-indigo-700"
+            }`}
+          >
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>
+              {hasInsufficientBalance
+                ? `⚠️ Insufficient balance — requesting ${requestedDays} day${requestedDays !== 1 ? "s" : ""} but only ${selectedBalance?.balance ?? 0} available.`
+                : balanceUnknown
+                ? "No leave balance record found for this type. HR must allocate balance first."
+                : `Requesting ${requestedDays} day${requestedDays !== 1 ? "s" : ""} · ${selectedBalance?.balance} day${selectedBalance?.balance !== 1 ? "s" : ""} remaining after approval.`}
+            </span>
+          </div>
+        )}
+
         {/* Reason */}
         <div className="space-y-1.5">
           <Label htmlFor="reason" className="flex items-center gap-1.5 text-xs font-semibold">
@@ -212,7 +295,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
           <Button
             type="submit"
             className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            disabled={applyMutation.isPending}
+            disabled={applyMutation.isPending || !!hasInsufficientBalance || !!balanceUnknown}
           >
             {applyMutation.isPending ? "Submitting..." : "Submit Application"}
           </Button>

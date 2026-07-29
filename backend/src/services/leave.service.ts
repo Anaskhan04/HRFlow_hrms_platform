@@ -2,6 +2,13 @@ import { Prisma, LeaveRequest, LeaveStatus } from "@prisma/client";
 import leaveRepository from "../repositories/leave.repository";
 
 class LeaveService {
+  private calculateLeaveDays(startDate: string | Date, endDate: string | Date): number {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  }
+
   async createLeaveRequest(
     data: Prisma.LeaveRequestUncheckedCreateInput | Prisma.LeaveRequestCreateInput
   ): Promise<LeaveRequest> {
@@ -36,6 +43,23 @@ class LeaveService {
       }
     } else {
       throw new Error("leaveTypeId is required.");
+    }
+
+    // Validate leave balance
+    if (data.startDate && data.endDate && "employeeId" in data && "leaveTypeId" in data) {
+      const requestedDays = this.calculateLeaveDays(data.startDate, data.endDate);
+      const balanceRecord = await leaveRepository.findLeaveBalance(
+        data.employeeId as string,
+        data.leaveTypeId as string
+      );
+
+      if (!balanceRecord) {
+        throw new Error("No leave balance found for this leave type. Please contact HR.");
+      }
+
+      if (balanceRecord.balance < requestedDays) {
+        throw new Error(`Insufficient leave balance. You requested ${requestedDays} days, but only have ${balanceRecord.balance} days available.`);
+      }
     }
 
     // Default status = PENDING if not specified
@@ -81,6 +105,10 @@ class LeaveService {
     return leaveRepository.findByEmployeeId(employeeId);
   }
 
+  async getLeaveBalances(employeeId: string) {
+    return leaveRepository.findLeaveBalancesByEmployee(employeeId);
+  }
+
   async approveLeaveRequest(id: string, approverId?: string): Promise<LeaveRequest> {
     const leaveRequest = await leaveRepository.findById(id);
 
@@ -95,6 +123,26 @@ class LeaveService {
     if (leaveRequest.status !== LeaveStatus.PENDING) {
       throw new Error("Only pending leave requests can be approved.");
     }
+
+    const requestedDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate);
+    
+    // Check balance again just in case it changed since application
+    const balanceRecord = await leaveRepository.findLeaveBalance(
+      leaveRequest.employeeId,
+      leaveRequest.leaveTypeId
+    );
+    
+    if (!balanceRecord || balanceRecord.balance < requestedDays) {
+      throw new Error("Insufficient leave balance to approve this request.");
+    }
+
+    // Deduct balance
+    await leaveRepository.updateLeaveBalance(
+      leaveRequest.employeeId,
+      leaveRequest.leaveTypeId,
+      -requestedDays,
+      requestedDays
+    );
 
     return leaveRepository.update(id, {
       status: LeaveStatus.APPROVED,

@@ -19,6 +19,24 @@ class LeaveController {
     });
   });
 
+  getBalances = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const employeeId = req.params.employeeId as string;
+    if (!employeeId) {
+      res.status(400).json({
+        success: false,
+        message: "Employee ID is required.",
+      });
+      return;
+    }
+
+    const balances = await leaveService.getLeaveBalances(employeeId);
+
+    res.status(200).json({
+      success: true,
+      data: balances,
+    });
+  });
+
   apply = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const employeeId = req.user?.employeeId || req.body.employeeId;
     if (!employeeId) {

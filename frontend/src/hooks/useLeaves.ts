@@ -25,6 +25,15 @@ export const useLeaveTypes = () => {
   });
 };
 
+export const useLeaveBalances = (employeeId: string) => {
+  return useQuery<any[], Error>({
+    queryKey: ["leaveBalances", employeeId],
+    queryFn: () => leaveService.getLeaveBalances(employeeId),
+    enabled: !!employeeId,
+  });
+};
+
+
 export const useLeave = (id?: string) => {
   return useQuery<LeaveRequest, Error>({
     queryKey: ["leave", id],
@@ -52,6 +61,7 @@ export const useApproveLeave = () => {
     mutationFn: leaveService.approveLeave,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
+      queryClient.invalidateQueries({ queryKey: ["leaveBalances"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });

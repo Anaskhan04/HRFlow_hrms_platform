@@ -15,6 +15,8 @@ router.post("/apply", leaveController.apply);
 router.get("/types", leaveController.getTypes);
 router.get("/my-leaves", leaveController.getMyLeaves);
 
+router.get("/balances/:employeeId", leaveController.getBalances);
+
 router.patch("/:id/approve", leaveController.approve);
 
 router.patch("/:id/reject", leaveController.reject);

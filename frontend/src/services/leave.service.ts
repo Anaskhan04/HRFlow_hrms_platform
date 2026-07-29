@@ -81,6 +81,11 @@ export const leaveService = {
     return response.data.data || [];
   },
 
+  getLeaveBalances: async (employeeId: string) => {
+    const response = await apiClient.get<{ success: boolean; data: any[] }>(`/leaves/balances/${employeeId}`);
+    return response.data.data || [];
+  },
+
   getLeaveById: async (id: string): Promise<LeaveRequest> => {
     const response = await apiClient.get<{ success: boolean; data: LeaveRequest }>(`/leaves/${id}`);
     return response.data.data;

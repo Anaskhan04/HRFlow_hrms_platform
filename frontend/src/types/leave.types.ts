@@ -9,6 +9,15 @@ export interface LeaveType {
   organizationId: string;
 }
 
+export interface LeaveBalance {
+  id: string;
+  employeeId: string;
+  leaveTypeId: string;
+  balance: number;
+  used: number;
+  leaveType?: LeaveType;
+}
+
 export interface LeaveRequest {
   id: string;
   employeeId: string;

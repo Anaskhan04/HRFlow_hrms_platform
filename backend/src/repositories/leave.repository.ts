@@ -77,6 +77,39 @@ class LeaveRepository {
   async findEmployeeById(id: string): Promise<Employee | null> {
     return employeeRepository.findById(id);
   }
+
+  async findLeaveBalance(employeeId: string, leaveTypeId: string) {
+    return prisma.leaveBalance.findUnique({
+      where: {
+        employeeId_leaveTypeId: {
+          employeeId,
+          leaveTypeId,
+        },
+      },
+    });
+  }
+
+  async findLeaveBalancesByEmployee(employeeId: string) {
+    return prisma.leaveBalance.findMany({
+      where: { employeeId },
+      include: { leaveType: true },
+    });
+  }
+
+  async updateLeaveBalance(employeeId: string, leaveTypeId: string, balanceDelta: number, usedDelta: number) {
+    return prisma.leaveBalance.update({
+      where: {
+        employeeId_leaveTypeId: {
+          employeeId,
+          leaveTypeId,
+        },
+      },
+      data: {
+        balance: { increment: balanceDelta },
+        used: { increment: usedDelta },
+      },
+    });
+  }
 }
 
 export default new LeaveRepository();
