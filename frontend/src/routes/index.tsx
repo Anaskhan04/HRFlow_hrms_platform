@@ -10,7 +10,6 @@ import LeaveListPage from "../pages/LeaveListPage";
 import { AttendanceListPage } from "../pages/AttendanceListPage";
 import { PayrollListPage } from "../pages/PayrollListPage";
 import { ProfilePage } from "../pages/ProfilePage";
-import PlaceholderPage from "../pages/PlaceholderPage";
 import OrganizationSetupPage from "../pages/OrganizationSetupPage";
 
 

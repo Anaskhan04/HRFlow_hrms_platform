@@ -1,14 +1,21 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
+  AlertCircle,
   CheckCircle2,
   Clock,
+  Download,
   FileText,
   CreditCard,
+  Loader2,
 } from "lucide-react";
 import { Modal } from "../ui/modal";
 
 import { Button } from "../ui/button";
+import { useAuth } from "../../hooks/useAuth";
+import organizationService from "../../services/organization.service";
 import type { PayrollRecord } from "../../types";
+import { downloadPayrollPayslip } from "../../utils/payroll-payslip";
 
 interface PayrollDetailsDialogProps {
   isOpen: boolean;
@@ -39,6 +46,33 @@ export const PayrollDetailsDialog: React.FC<PayrollDetailsDialogProps> = ({
   record,
   onPay,
 }) => {
+  const { user } = useAuth();
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const shouldFetchOrganizations =
+    isOpen &&
+    !record?.employee?.organization?.name &&
+    !user?.employee?.organization?.name;
+
+  const { data: organizations = [] } = useQuery({
+    queryKey: ["organizations"],
+    queryFn: organizationService.getOrganizations,
+    staleTime: 10 * 60 * 1000,
+    enabled: shouldFetchOrganizations,
+  });
+
+  useEffect(() => {
+    if (!isOpen) {
+      setDownloadError(null);
+      setIsDownloading(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    setDownloadError(null);
+  }, [record?.id]);
+
   if (!record) return null;
 
   const empName = record.employee
@@ -46,6 +80,11 @@ export const PayrollDetailsDialog: React.FC<PayrollDetailsDialogProps> = ({
     : "Unknown Employee";
   const empCode = record.employee?.employeeCode || record.employeeId;
   const periodLabel = `${MONTH_NAMES[record.month] || record.month} ${record.year}`;
+  const companyName =
+    record.employee?.organization?.name ||
+    user?.employee?.organization?.name ||
+    organizations[0]?.name ||
+    "HRFlow Enterprise Corporation";
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -61,6 +100,26 @@ export const PayrollDetailsDialog: React.FC<PayrollDetailsDialogProps> = ({
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleDownloadPayslip = async () => {
+    setDownloadError(null);
+    setIsDownloading(true);
+
+    try {
+      await downloadPayrollPayslip({
+        payroll: record,
+        companyName,
+      });
+    } catch (error) {
+      setDownloadError(
+        error instanceof Error
+          ? error.message
+          : "Unable to generate the payslip PDF right now."
+      );
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -168,10 +227,34 @@ export const PayrollDetailsDialog: React.FC<PayrollDetailsDialogProps> = ({
           </div>
         </div>
 
+        {downloadError && (
+          <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>{downloadError}</p>
+          </div>
+        )}
+
         {/* Action Footers */}
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
-          <Button variant="outline" onClick={onClose} className="h-9">
+        <div className="flex flex-col-reverse gap-2 border-t border-border/40 pt-2 sm:flex-row sm:items-center sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="h-9 w-full sm:w-auto"
+          >
             Close
+          </Button>
+
+          <Button
+            onClick={handleDownloadPayslip}
+            disabled={isDownloading}
+            className="h-9 w-full gap-2 sm:w-auto"
+          >
+            {isDownloading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            {isDownloading ? "Preparing PDF..." : "Download Payslip"}
           </Button>
 
           {record.status !== "PAID" && (
@@ -180,7 +263,7 @@ export const PayrollDetailsDialog: React.FC<PayrollDetailsDialogProps> = ({
                 onPay(record);
                 onClose();
               }}
-              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="h-9 w-full gap-2 bg-emerald-600 text-white hover:bg-emerald-700 sm:w-auto"
             >
               <CheckCircle2 className="h-4 w-4" />
               Mark as PAID

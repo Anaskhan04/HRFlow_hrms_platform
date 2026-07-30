@@ -8,7 +8,6 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
-import { Organization } from "../types";
 
 const organizationSchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters"),
