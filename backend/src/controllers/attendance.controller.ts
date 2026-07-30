@@ -7,18 +7,44 @@ import {
 } from "../validators/attendance.validator";
 import { asyncHandler } from "../utils/asyncHandler";
 
-const canOverrideEmployeeId = (role: Role | undefined): boolean => {
+const isPrivilegedRole = (role: Role | undefined): boolean => {
   return role === Role.ADMIN || role === Role.HR;
+};
+
+/**
+ * Resolves the target employeeId for attendance endpoints with strict RBAC:
+ *
+ * - ADMIN / HR: body/query parameters take PRECEDENCE over JWT employeeId.
+ *   This lets HR/Admin backfill attendance for another employee even when HR
+ *   users themselves have a linked employee record in their JWT. If no override
+ *   is provided, fall back to the authenticated user's employeeId.
+ *
+ * - EMPLOYEE / MANAGER: body/query employeeId is ALWAYS IGNORED. Only the
+ *   JWT's employeeId (authenticated identity) is used — preventing buddy
+ *   punching and unauthorized attendance snooping.
+ *
+ * @throws 400 if no employeeId can be resolved for either role class.
+ */
+const resolveEmployeeId = (
+  req: Request,
+  overrideFromBodyOrQuery?: string
+): { employeeId?: string } => {
+  const privileged = isPrivilegedRole(req.user?.role);
+
+  if (privileged) {
+    if (overrideFromBodyOrQuery && overrideFromBodyOrQuery.trim() !== "") {
+      return { employeeId: overrideFromBodyOrQuery };
+    }
+    return { employeeId: req.user?.employeeId };
+  }
+
+  return { employeeId: req.user?.employeeId };
 };
 
 class AttendanceController {
   checkIn = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const data = checkInSchema.parse(req.body);
-    let employeeId: string | undefined = req.user?.employeeId;
-
-    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
-      employeeId = data.employeeId || req.body.employeeId;
-    }
+    const { employeeId } = resolveEmployeeId(req, data.employeeId);
 
     if (!employeeId) {
       res.status(400).json({
@@ -42,11 +68,7 @@ class AttendanceController {
 
   checkOut = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const data = checkOutSchema.parse(req.body);
-    let employeeId: string | undefined = req.user?.employeeId;
-
-    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
-      employeeId = data.employeeId || req.body.employeeId;
-    }
+    const { employeeId } = resolveEmployeeId(req, data.employeeId);
 
     if (!employeeId) {
       res.status(400).json({
@@ -69,11 +91,10 @@ class AttendanceController {
   });
 
   getToday = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    let employeeId: string | undefined = req.user?.employeeId;
-
-    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
-      employeeId = (req.query.employeeId as string) || req.body.employeeId;
-    }
+    const { employeeId } = resolveEmployeeId(
+      req,
+      req.query.employeeId as string
+    );
 
     if (!employeeId) {
       res.status(400).json({
@@ -92,11 +113,10 @@ class AttendanceController {
   });
 
   getHistory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    let employeeId: string | undefined = req.user?.employeeId;
-
-    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
-      employeeId = (req.query.employeeId as string) || req.body.employeeId;
-    }
+    const { employeeId } = resolveEmployeeId(
+      req,
+      req.query.employeeId as string
+    );
 
     if (!employeeId) {
       res.status(400).json({
@@ -120,7 +140,18 @@ class AttendanceController {
     const search = req.query.search as string;
     const status = req.query.status as any;
     const date = req.query.date as string;
-    const employeeId = req.query.employeeId as string;
+
+    // ✅ FIX Bug #2: EMPLOYEE role cannot filter by arbitrary employeeId via query.
+    // Only privileged (ADMIN / HR) roles may supply ?employeeId=<other> to filter
+    // attendance list for a specific employee. For regular employees, the list
+    // is forcibly scoped to their own employeeId (or unfiltered if they have
+    // no linked employee record — but that should never happen for EMPLOYEE role).
+    let employeeId: string | undefined;
+    if (isPrivilegedRole(req.user?.role)) {
+      employeeId = req.query.employeeId as string | undefined;
+    } else {
+      employeeId = req.user?.employeeId;
+    }
 
     const result = await attendanceService.getAllAttendance({
       page,

@@ -1,4 +1,5 @@
 import { Prisma, LeaveRequest, LeaveStatus } from "@prisma/client";
+import prisma from "../lib/prisma";
 import leaveRepository from "../repositories/leave.repository";
 
 class LeaveService {
@@ -125,29 +126,46 @@ class LeaveService {
     }
 
     const requestedDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate);
-    
+
     // Check balance again just in case it changed since application
     const balanceRecord = await leaveRepository.findLeaveBalance(
       leaveRequest.employeeId,
       leaveRequest.leaveTypeId
     );
-    
+
     if (!balanceRecord || balanceRecord.balance < requestedDays) {
       throw new Error("Insufficient leave balance to approve this request.");
     }
 
-    // Deduct balance
-    await leaveRepository.updateLeaveBalance(
-      leaveRequest.employeeId,
-      leaveRequest.leaveTypeId,
-      -requestedDays,
-      requestedDays
-    );
+    // ✅ FIX #1: Wrap balance deduction + leave status update in an atomic Prisma transaction
+    // If either operation fails, neither is applied.
+    const [, updatedLeave] = await prisma.$transaction([
+      prisma.leaveBalance.update({
+        where: {
+          employeeId_leaveTypeId: {
+            employeeId: leaveRequest.employeeId,
+            leaveTypeId: leaveRequest.leaveTypeId,
+          },
+        },
+        data: {
+          balance: { decrement: requestedDays },
+          used: { increment: requestedDays },
+        },
+      }),
+      prisma.leaveRequest.update({
+        where: { id },
+        data: {
+          status: LeaveStatus.APPROVED,
+          approvedBy: approverId || null,
+        },
+        include: {
+          employee: true,
+          leaveType: true,
+        },
+      }),
+    ]);
 
-    return leaveRepository.update(id, {
-      status: LeaveStatus.APPROVED,
-      approvedBy: approverId || null,
-    });
+    return updatedLeave;
   }
 
   async rejectLeaveRequest(id: string, approverId?: string): Promise<LeaveRequest> {
@@ -161,6 +179,7 @@ class LeaveService {
       throw new Error("Only pending leave requests can be rejected.");
     }
 
+    // ✅ Rejection does NOT touch LeaveBalance (balance was never deducted for PENDING requests)
     return leaveRepository.update(id, {
       status: LeaveStatus.REJECTED,
       approvedBy: approverId || null,
@@ -178,14 +197,44 @@ class LeaveService {
       throw new Error("You can only cancel your own leave requests.");
     }
 
-    if (leaveRequest.status === LeaveStatus.APPROVED) {
-      throw new Error("Approved leave requests cannot be cancelled.");
+    const status = leaveRequest.status;
+
+    if (status !== LeaveStatus.PENDING && status !== LeaveStatus.APPROVED) {
+      throw new Error("Only pending or approved leave requests can be cancelled.");
     }
 
-    if (leaveRequest.status !== LeaveStatus.PENDING) {
-      throw new Error("Only pending leave requests can be cancelled.");
+    const requestedDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate);
+
+    // If the leave being cancelled was already APPROVED, we must REFUND the deducted balance
+    if (status === LeaveStatus.APPROVED) {
+      // ✅ FIX #2: Approved cancellation -> refund balance + used atomically
+      const [, updatedLeave] = await prisma.$transaction([
+        prisma.leaveBalance.update({
+          where: {
+            employeeId_leaveTypeId: {
+              employeeId: leaveRequest.employeeId,
+              leaveTypeId: leaveRequest.leaveTypeId,
+            },
+          },
+          data: {
+            balance: { increment: requestedDays },
+            used: { decrement: requestedDays },
+          },
+        }),
+        prisma.leaveRequest.update({
+          where: { id },
+          data: { status: LeaveStatus.CANCELLED },
+          include: {
+            employee: true,
+            leaveType: true,
+          },
+        }),
+      ]);
+
+      return updatedLeave;
     }
 
+    // PENDING -> CANCELLED (balance was never deducted, no refund needed)
     return leaveRepository.update(id, {
       status: LeaveStatus.CANCELLED,
     });
@@ -199,6 +248,22 @@ class LeaveService {
 
     if (!existingLeaveRequest) {
       throw new Error("LeaveRequest not found.");
+    }
+
+    // ✅ FIX #3: Prevent edits to date/type/employee on non-PENDING leaves
+    // to avoid LeaveBalance inconsistency.
+    if (existingLeaveRequest.status !== LeaveStatus.PENDING) {
+      const isModifyingBalanceAffectingFields =
+        "startDate" in data ||
+        "endDate" in data ||
+        ("leaveTypeId" in data && data.leaveTypeId !== existingLeaveRequest.leaveTypeId) ||
+        ("employeeId" in data && data.employeeId !== existingLeaveRequest.employeeId);
+
+      if (isModifyingBalanceAffectingFields) {
+        throw new Error(
+          `Cannot modify startDate, endDate, leaveTypeId, or employeeId on a ${existingLeaveRequest.status} leave request. Cancel and re-apply instead.`
+        );
+      }
     }
 
     // Validate startDate vs endDate if updated
@@ -243,6 +308,39 @@ class LeaveService {
       throw new Error("LeaveRequest not found.");
     }
 
+    // ✅ FIX #4: If deleting APPROVED leave -> refund balance atomically with deletion
+    if (existingLeaveRequest.status === LeaveStatus.APPROVED) {
+      const requestedDays = this.calculateLeaveDays(
+        existingLeaveRequest.startDate,
+        existingLeaveRequest.endDate
+      );
+
+      const [, deletedLeave] = await prisma.$transaction([
+        prisma.leaveBalance.update({
+          where: {
+            employeeId_leaveTypeId: {
+              employeeId: existingLeaveRequest.employeeId,
+              leaveTypeId: existingLeaveRequest.leaveTypeId,
+            },
+          },
+          data: {
+            balance: { increment: requestedDays },
+            used: { decrement: requestedDays },
+          },
+        }),
+        prisma.leaveRequest.delete({
+          where: { id },
+          include: {
+            employee: true,
+            leaveType: true,
+          },
+        }),
+      ]);
+
+      return deletedLeave;
+    }
+
+    // Non-approved leaves (PENDING / REJECTED / CANCELLED) -> no balance impact
     return leaveRepository.delete(id);
   }
 }
