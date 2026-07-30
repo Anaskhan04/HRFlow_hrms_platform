@@ -1,10 +1,15 @@
 import { Request, Response } from "express";
+import { Role } from "@prisma/client";
 import leaveService from "../services/leave.service";
 import {
   createLeaveSchema,
   updateLeaveSchema,
 } from "../validators/leave.validator";
 import { asyncHandler } from "../utils/asyncHandler";
+
+const canOverrideEmployeeId = (role: Role | undefined): boolean => {
+  return role === Role.ADMIN || role === Role.HR;
+};
 
 class LeaveController {
   create = asyncHandler(async (req: Request, res: Response): Promise<void> => {
@@ -20,7 +25,24 @@ class LeaveController {
   });
 
   getBalances = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const employeeId = req.params.employeeId as string;
+    const paramEmployeeId = req.params.employeeId as string;
+    const userEmployeeId = req.user?.employeeId;
+    const isPrivileged = canOverrideEmployeeId(req.user?.role);
+
+    let employeeId: string | undefined;
+    if (isPrivileged) {
+      employeeId = paramEmployeeId;
+    } else {
+      employeeId = userEmployeeId;
+      if (paramEmployeeId && employeeId && paramEmployeeId !== employeeId) {
+        res.status(403).json({
+          success: false,
+          message: "Forbidden. You can only view your own leave balances.",
+        });
+        return;
+      }
+    }
+
     if (!employeeId) {
       res.status(400).json({
         success: false,
@@ -38,7 +60,12 @@ class LeaveController {
   });
 
   apply = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const employeeId = req.user?.employeeId || req.body.employeeId;
+    let employeeId: string | undefined = req.user?.employeeId;
+
+    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
+      employeeId = req.body.employeeId;
+    }
+
     if (!employeeId) {
       res.status(400).json({
         success: false,
@@ -68,10 +95,12 @@ class LeaveController {
 
   getMyLeaves = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
-      const employeeId =
-        req.user?.employeeId ||
-        (req.query.employeeId as string) ||
-        req.body.employeeId;
+      let employeeId: string | undefined = req.user?.employeeId;
+
+      if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
+        employeeId = (req.query.employeeId as string) || req.body.employeeId;
+      }
+
       if (!employeeId) {
         res.status(400).json({
           success: false,
@@ -118,7 +147,12 @@ class LeaveController {
   });
 
   cancel = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const employeeId = req.user?.employeeId || req.body.employeeId;
+    let employeeId: string | undefined = req.user?.employeeId;
+
+    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
+      employeeId = req.body.employeeId;
+    }
+
     if (!employeeId) {
       res.status(400).json({
         success: false,

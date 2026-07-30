@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Role } from "@prisma/client";
 import attendanceService from "../services/attendance.service";
 import {
   checkInSchema,
@@ -6,11 +7,18 @@ import {
 } from "../validators/attendance.validator";
 import { asyncHandler } from "../utils/asyncHandler";
 
+const canOverrideEmployeeId = (role: Role | undefined): boolean => {
+  return role === Role.ADMIN || role === Role.HR;
+};
+
 class AttendanceController {
   checkIn = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const data = checkInSchema.parse(req.body);
-    const employeeId =
-      req.user?.employeeId || data.employeeId || req.body.employeeId;
+    let employeeId: string | undefined = req.user?.employeeId;
+
+    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
+      employeeId = data.employeeId || req.body.employeeId;
+    }
 
     if (!employeeId) {
       res.status(400).json({
@@ -34,8 +42,11 @@ class AttendanceController {
 
   checkOut = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const data = checkOutSchema.parse(req.body);
-    const employeeId =
-      req.user?.employeeId || data.employeeId || req.body.employeeId;
+    let employeeId: string | undefined = req.user?.employeeId;
+
+    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
+      employeeId = data.employeeId || req.body.employeeId;
+    }
 
     if (!employeeId) {
       res.status(400).json({
@@ -58,10 +69,11 @@ class AttendanceController {
   });
 
   getToday = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const employeeId =
-      req.user?.employeeId ||
-      (req.query.employeeId as string) ||
-      req.body.employeeId;
+    let employeeId: string | undefined = req.user?.employeeId;
+
+    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
+      employeeId = (req.query.employeeId as string) || req.body.employeeId;
+    }
 
     if (!employeeId) {
       res.status(400).json({
@@ -80,10 +92,11 @@ class AttendanceController {
   });
 
   getHistory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const employeeId =
-      req.user?.employeeId ||
-      (req.query.employeeId as string) ||
-      req.body.employeeId;
+    let employeeId: string | undefined = req.user?.employeeId;
+
+    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
+      employeeId = (req.query.employeeId as string) || req.body.employeeId;
+    }
 
     if (!employeeId) {
       res.status(400).json({
