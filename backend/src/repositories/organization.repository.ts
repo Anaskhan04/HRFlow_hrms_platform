@@ -21,6 +21,12 @@ class OrganizationRepository {
     });
   }
 
+  async findByEmail(email: string): Promise<Organization | null> {
+    return prisma.organization.findUnique({
+      where: { email },
+    });
+  }
+
   async findAll(): Promise<Organization[]> {
     return prisma.organization.findMany({
       where: {
