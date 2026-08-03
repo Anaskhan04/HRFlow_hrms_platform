@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Role } from "@prisma/client";
 import leaveService from "../services/leave.service";
+import exportService from "../services/export.service";
 import {
   createLeaveSchema,
   updateLeaveSchema,
@@ -180,6 +181,16 @@ class LeaveController {
       success: true,
       data: leaveRequests,
     });
+  });
+
+  export = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    // For export, we reuse getAll logic (we can pass query filters to getLeaveRequests in the future if needed, but currently it just returns all)
+    const leaveRequests = await leaveService.getLeaveRequests();
+    const buffer = await exportService.exportLeaves(leaveRequests);
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", "attachment; filename=leave-requests.xlsx");
+    res.send(buffer);
   });
 
   getTypes = asyncHandler(async (req: Request, res: Response): Promise<void> => {

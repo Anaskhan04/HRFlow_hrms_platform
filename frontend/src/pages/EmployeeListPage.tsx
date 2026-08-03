@@ -4,6 +4,7 @@ import { useEmployees } from "../hooks/useEmployees";
 import EmployeeSearchFilter from "../components/employees/EmployeeSearchFilter";
 import EmployeeTable from "../components/employees/EmployeeTable";
 import EmployeePagination from "../components/employees/EmployeePagination";
+import employeeService from "../services/employee.service";
 import AddEmployeeModal from "../components/employees/AddEmployeeModal";
 import EditEmployeeModal from "../components/employees/EditEmployeeModal";
 import DeleteEmployeeDialog from "../components/employees/DeleteEmployeeDialog";
@@ -56,6 +57,14 @@ export const EmployeeListPage: React.FC = () => {
     });
   };
 
+  const handleExport = async () => {
+    try {
+      await employeeService.exportEmployees(queryParams);
+    } catch (err) {
+      console.error("Failed to export employees", err);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
       {/* Header Banner */}
@@ -105,6 +114,7 @@ export const EmployeeListPage: React.FC = () => {
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
         onOpenAddModal={() => setIsAddModalOpen(true)}
+        onExport={handleExport}
       />
 
       {/* Employee Data Table */}

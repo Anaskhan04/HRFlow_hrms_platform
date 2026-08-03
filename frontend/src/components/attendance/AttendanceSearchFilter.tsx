@@ -6,6 +6,7 @@ import {
   Calendar,
   LogIn,
   LogOut,
+  Download,
 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -17,6 +18,7 @@ interface AttendanceSearchFilterProps {
   onReset: () => void;
   onOpenCheckInModal: () => void;
   onOpenCheckOutModal: () => void;
+  onExport: () => void;
 }
 
 export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
@@ -25,6 +27,7 @@ export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
   onReset,
   onOpenCheckInModal,
   onOpenCheckOutModal,
+  onExport,
 }) => {
   const [searchInput, setSearchInput] = useState(queryParams.search || "");
 
@@ -71,6 +74,15 @@ export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            onClick={onExport}
+            variant="outline"
+            className="gap-2 shadow-sm font-semibold"
+          >
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
+
           <Button
             onClick={onOpenCheckInModal}
             className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-500/20"

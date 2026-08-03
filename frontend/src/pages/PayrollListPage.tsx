@@ -18,6 +18,7 @@ import {
   DeletePayrollDialog,
 } from "../components/payroll";
 import { Button } from "../components/ui/button";
+import { payrollService } from "../services/payroll.service";
 import type { PayrollRecord, PayrollQueryParams } from "../types";
 
 export const PayrollListPage: React.FC = () => {
@@ -120,6 +121,14 @@ export const PayrollListPage: React.FC = () => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      await payrollService.exportPayrolls(queryParams);
+    } catch (err) {
+      console.error("Failed to export payrolls", err);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Page Header */}
@@ -214,6 +223,7 @@ export const PayrollListPage: React.FC = () => {
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
         onOpenGenerateModal={() => setIsGenerateModalOpen(true)}
+        onExport={handleExport}
       />
 
       {/* Payroll Table */}

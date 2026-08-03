@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Role } from "@prisma/client";
 import attendanceService from "../services/attendance.service";
+import exportService from "../services/export.service";
 import {
   checkInSchema,
   checkOutSchema,
@@ -165,7 +166,18 @@ class AttendanceController {
     res.status(200).json({
       success: true,
       data: result,
+      ...result,
     });
+  });
+
+  export = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const queryParams = { ...req.query, limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 1000 };
+    const result = await attendanceService.getAllAttendance(queryParams as any);
+    const buffer = await exportService.exportAttendance(result.attendance);
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", "attachment; filename=attendance.xlsx");
+    res.send(buffer);
   });
 }
 

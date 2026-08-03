@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import payrollService from "../services/payroll.service";
+import exportService from "../services/export.service";
 import { generatePayrollSchema } from "../validators/payroll.validator";
 import { asyncHandler } from "../utils/asyncHandler";
 
@@ -43,7 +44,36 @@ class PayrollController {
     res.status(200).json({
       success: true,
       data: result,
+      ...result,
     });
+  });
+
+  export = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const search = req.query.search as string;
+    const month = req.query.month && req.query.month !== "ALL" ? parseInt(req.query.month as string, 10) : undefined;
+    const year = req.query.year && req.query.year !== "ALL" ? parseInt(req.query.year as string, 10) : undefined;
+    const status = req.query.status as any;
+    const employeeId = req.query.employeeId as string;
+    const sort = req.query.sort as string;
+    const order = req.query.order as string;
+
+    const result = await payrollService.getAllPayrolls({
+      page: 1,
+      limit: 1000,
+      search,
+      month,
+      year,
+      status,
+      employeeId,
+      sort,
+      order,
+    });
+    
+    const buffer = await exportService.exportPayrolls(result.payrolls);
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", "attachment; filename=payroll.xlsx");
+    res.send(buffer);
   });
 
   update = asyncHandler(async (req: Request, res: Response): Promise<void> => {

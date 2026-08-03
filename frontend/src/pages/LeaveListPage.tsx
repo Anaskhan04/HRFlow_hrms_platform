@@ -11,6 +11,7 @@ import {
   type LeaveActionType,
 } from "../components/leaves";
 import { Button } from "../components/ui/button";
+import leaveService from "../services/leave.service";
 import type { LeaveRequest, LeaveQueryParams } from "../types";
 
 export const LeaveListPage: React.FC = () => {
@@ -78,6 +79,14 @@ export const LeaveListPage: React.FC = () => {
     });
   };
 
+  const handleExport = async () => {
+    try {
+      await leaveService.exportLeaves();
+    } catch (err) {
+      console.error("Failed to export leaves", err);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
       {/* Header Banner */}
@@ -139,6 +148,7 @@ export const LeaveListPage: React.FC = () => {
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
         onOpenApplyModal={() => setIsApplyModalOpen(true)}
+        onExport={handleExport}
       />
 
       {/* Main Table */}

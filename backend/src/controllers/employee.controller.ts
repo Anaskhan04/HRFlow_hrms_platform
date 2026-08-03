@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 
 import employeeService from "../services/employee.service";
+import exportService from "../services/export.service";
 import {
   createEmployeeSchema,
   updateEmployeeSchema,
@@ -28,6 +29,17 @@ class EmployeeController {
       data: result,
       ...result,
     });
+  });
+
+  export = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    // Fetch employees with the exact same filters, but we might want all of them for export or limit to 1000
+    const queryParams = { ...req.query, limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 1000 };
+    const result = await employeeService.getEmployees(queryParams as any);
+    const buffer = await exportService.exportEmployees(result.employees);
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", "attachment; filename=employees.xlsx");
+    res.send(buffer);
   });
 
   getById = asyncHandler(async (req: Request, res: Response): Promise<void> => {

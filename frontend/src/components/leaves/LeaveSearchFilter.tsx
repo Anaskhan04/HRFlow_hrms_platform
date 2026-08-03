@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Filter, X, ArrowUpDown, PlusCircle } from "lucide-react";
+import { Search, Filter, X, ArrowUpDown, PlusCircle, Download } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useLeaveTypes } from "../../hooks/useLeaves";
@@ -10,6 +10,7 @@ interface LeaveSearchFilterProps {
   onFilterChange: (newParams: Partial<LeaveQueryParams>) => void;
   onReset: () => void;
   onOpenApplyModal: () => void;
+  onExport: () => void;
 }
 
 export const LeaveSearchFilter: React.FC<LeaveSearchFilterProps> = ({
@@ -17,6 +18,7 @@ export const LeaveSearchFilter: React.FC<LeaveSearchFilterProps> = ({
   onFilterChange,
   onReset,
   onOpenApplyModal,
+  onExport,
 }) => {
   const { data: leaveTypes = [] } = useLeaveTypes();
   const [searchInput, setSearchInput] = useState(queryParams.search || "");
@@ -63,8 +65,12 @@ export const LeaveSearchFilter: React.FC<LeaveSearchFilterProps> = ({
           )}
         </div>
 
-        {/* Apply Leave Button */}
+        {/* Apply / Export Actions */}
         <div className="flex items-center gap-2">
+          <Button onClick={onExport} variant="outline" className="gap-2 shadow-sm font-semibold">
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
           <Button
             onClick={onOpenApplyModal}
             className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-sm"

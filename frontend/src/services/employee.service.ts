@@ -57,6 +57,30 @@ export const employeeService = {
   deleteEmployee: async (id: string): Promise<void> => {
     await apiClient.delete(`/employees/${id}`);
   },
+
+  exportEmployees: async (params: EmployeeQueryParams = {}): Promise<void> => {
+    const cleanParams: Record<string, any> = {};
+    if (params.search && params.search.trim() !== "") cleanParams.search = params.search.trim();
+    if (params.department && params.department !== "ALL") cleanParams.department = params.department;
+    if (params.status && params.status !== "ALL") cleanParams.status = params.status;
+    if (params.sort) cleanParams.sort = params.sort;
+    if (params.order) cleanParams.order = params.order;
+
+    const response = await apiClient.get("/employees/export", {
+      params: cleanParams,
+      responseType: "blob",
+      timeout: 120_000,
+    });
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Employees_Export_${new Date().toISOString().split("T")[0]}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 export default employeeService;

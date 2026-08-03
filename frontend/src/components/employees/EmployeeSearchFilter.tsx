@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Filter, X, ArrowUpDown, UserPlus } from "lucide-react";
+import { Search, Filter, X, ArrowUpDown, UserPlus, Download } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useDepartments } from "../../hooks/useDepartments";
@@ -10,6 +10,7 @@ interface EmployeeSearchFilterProps {
   onFilterChange: (newParams: Partial<EmployeeQueryParams>) => void;
   onReset: () => void;
   onOpenAddModal: () => void;
+  onExport: () => void;
 }
 
 export const EmployeeSearchFilter: React.FC<EmployeeSearchFilterProps> = ({
@@ -17,6 +18,7 @@ export const EmployeeSearchFilter: React.FC<EmployeeSearchFilterProps> = ({
   onFilterChange,
   onReset,
   onOpenAddModal,
+  onExport,
 }) => {
   const { data: departments = [] } = useDepartments();
   const [searchInput, setSearchInput] = useState(queryParams.search || "");
@@ -68,11 +70,17 @@ export const EmployeeSearchFilter: React.FC<EmployeeSearchFilterProps> = ({
           )}
         </div>
 
-        {/* Add Employee Action */}
-        <Button onClick={onOpenAddModal} className="gap-2 font-semibold shadow-md">
-          <UserPlus className="h-4 w-4" />
-          <span>Add Employee</span>
-        </Button>
+        {/* Add / Export Actions */}
+        <div className="flex items-center gap-2">
+          <Button onClick={onExport} variant="outline" className="gap-2 shadow-sm font-semibold">
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
+          <Button onClick={onOpenAddModal} className="gap-2 font-semibold shadow-md">
+            <UserPlus className="h-4 w-4" />
+            <span>Add Employee</span>
+          </Button>
+        </div>
       </div>
 
       {/* Filters & Sorting Bar */}

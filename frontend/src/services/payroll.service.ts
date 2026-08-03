@@ -126,4 +126,29 @@ export const payrollService = {
     );
     return response.data.data;
   },
+
+  exportPayrolls: async (params: PayrollQueryParams = {}): Promise<void> => {
+    const response = await apiClient.get("/payroll/export", {
+      params: {
+        search: params.search,
+        month: params.month !== "ALL" ? params.month : undefined,
+        year: params.year !== "ALL" ? params.year : undefined,
+        status: params.status !== "ALL" ? params.status : undefined,
+        employeeId: params.employeeId,
+        sort: params.sort,
+        order: params.order,
+      },
+      responseType: "blob",
+      timeout: 120_000,
+    });
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Payroll_Export_${new Date().toISOString().split("T")[0]}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };

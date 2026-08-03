@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Filter, X, PlusCircle } from "lucide-react";
+import { Search, Filter, X, PlusCircle, Download } from "lucide-react";
 import { Input } from "../ui/input";
 
 import { Button } from "../ui/button";
@@ -10,6 +10,7 @@ interface PayrollSearchFilterProps {
   onFilterChange: (newParams: Partial<PayrollQueryParams>) => void;
   onReset: () => void;
   onOpenGenerateModal: () => void;
+  onExport: () => void;
 }
 
 const MONTH_NAMES = [
@@ -32,6 +33,7 @@ export const PayrollSearchFilter: React.FC<PayrollSearchFilterProps> = ({
   onFilterChange,
   onReset,
   onOpenGenerateModal,
+  onExport,
 }) => {
   const [searchInput, setSearchInput] = useState(queryParams.search || "");
 
@@ -78,6 +80,10 @@ export const PayrollSearchFilter: React.FC<PayrollSearchFilterProps> = ({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={onExport} variant="outline" className="gap-2 shadow-sm font-semibold">
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
           <Button
             onClick={onOpenGenerateModal}
             className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"

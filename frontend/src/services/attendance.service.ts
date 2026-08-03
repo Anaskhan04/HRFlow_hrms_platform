@@ -123,4 +123,26 @@ export const attendanceService = {
     }>("/attendance/check-out", input);
     return response.data.data;
   },
+
+  exportAttendance: async (params: AttendanceQueryParams = {}): Promise<void> => {
+    const response = await apiClient.get("/attendance/export", {
+      params: {
+        search: params.search,
+        status: params.status !== "ALL" ? params.status : undefined,
+        date: params.date,
+        employeeId: params.employeeId,
+      },
+      responseType: "blob",
+      timeout: 120_000,
+    });
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Attendance_Export_${new Date().toISOString().split("T")[0]}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };

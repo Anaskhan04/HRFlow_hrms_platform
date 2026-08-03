@@ -9,6 +9,7 @@ import {
   CheckOutModal,
 } from "../components/attendance";
 import { Button } from "../components/ui/button";
+import { attendanceService } from "../services/attendance.service";
 import type { AttendanceRecord, AttendanceQueryParams } from "../types";
 
 export const AttendanceListPage: React.FC = () => {
@@ -68,6 +69,14 @@ export const AttendanceListPage: React.FC = () => {
 
   const handleLimitChange = (newLimit: number) => {
     handleFilterChange({ limit: newLimit, page: 1 });
+  };
+
+  const handleExport = async () => {
+    try {
+      await attendanceService.exportAttendance(queryParams);
+    } catch (err) {
+      console.error("Failed to export attendance", err);
+    }
   };
 
   return (
@@ -135,6 +144,7 @@ export const AttendanceListPage: React.FC = () => {
         onOpenCheckOutModal={() =>
           setCheckOutModalState({ isOpen: true, record: null })
         }
+        onExport={handleExport}
       />
 
       {/* Attendance Table */}

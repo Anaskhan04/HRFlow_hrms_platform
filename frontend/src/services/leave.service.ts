@@ -112,6 +112,22 @@ export const leaveService = {
     });
     return response.data.data;
   },
+
+  exportLeaves: async (): Promise<void> => {
+    const response = await apiClient.get("/leaves/export", {
+      responseType: "blob",
+      timeout: 120_000,
+    });
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Leaves_Export_${new Date().toISOString().split("T")[0]}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 export default leaveService;
