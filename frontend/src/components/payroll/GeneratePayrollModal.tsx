@@ -89,10 +89,10 @@ export const GeneratePayrollModal: React.FC<GeneratePayrollModalProps> = ({
       setAllowances("0");
       setDeductions("0");
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       const message =
-        err?.response?.data?.message ||
-        err?.message ||
+        (err as any)?.response?.data?.message ||
+        (err as any)?.message ||
         "Failed to generate monthly payroll.";
       setErrorMsg(message);
     }

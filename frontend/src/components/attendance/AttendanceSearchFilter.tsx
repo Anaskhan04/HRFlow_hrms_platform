@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import type { AttendanceQueryParams } from "../../types";
+import type { AttendanceQueryParams, AttendanceStatus } from "../../types";
 
 interface AttendanceSearchFilterProps {
   queryParams: AttendanceQueryParams;
@@ -115,7 +115,7 @@ export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
             value={queryParams.status || "ALL"}
             onChange={(e) =>
               onFilterChange({
-                status: e.target.value as any,
+                status: e.target.value as AttendanceStatus | "ALL",
                 page: 1,
               })
             }

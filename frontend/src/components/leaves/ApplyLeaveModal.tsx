@@ -87,7 +87,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
 
   // Find balance for the selected leave type
   const selectedBalance = useMemo(
-    () => balances.find((b: any) => b.leaveTypeId === watchedLeaveTypeId) ?? null,
+    () => balances.find((b: { leaveTypeId: string }) => b.leaveTypeId === watchedLeaveTypeId) ?? null,
     [balances, watchedLeaveTypeId]
   );
 

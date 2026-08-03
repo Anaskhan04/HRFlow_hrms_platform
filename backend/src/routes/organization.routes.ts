@@ -15,7 +15,6 @@ router.get("/", organizationController.getAll);
 router.get("/:id", organizationController.getById);
 
 router.put("/:id", authorizeRole(Role.ADMIN, Role.HR), organizationController.update);
-router.patch("/:id", authorizeRole(Role.ADMIN, Role.HR), organizationController.update);
 
 router.delete("/:id", authorizeRole(Role.ADMIN), organizationController.remove);
 

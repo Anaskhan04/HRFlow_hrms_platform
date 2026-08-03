@@ -10,7 +10,7 @@ import { Label } from "../ui/label";
 import { useOrganizations } from "../../hooks/useOrganizations";
 import { useDepartments } from "../../hooks/useDepartments";
 import { useUpdateEmployee } from "../../hooks/useEmployees";
-import type { Employee } from "../../types";
+import type { Employee, UpdateEmployeeInput } from "../../types";
 
 const editEmployeeSchema = z.object({
   employeeCode: z.string().min(1, "Employee code is required"),
@@ -82,7 +82,7 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     if (!employee) return;
 
     try {
-      const payload: any = {
+      const payload: Record<string, any> = {
         employeeCode: data.employeeCode,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -97,7 +97,7 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       if (data.departmentId !== undefined) payload.departmentId = data.departmentId.trim() === "" ? null : data.departmentId;
       if (data.salary !== undefined) payload.salary = data.salary && !isNaN(Number(data.salary)) ? Number(data.salary) : null;
 
-      await updateMutation.mutateAsync({ id: employee.id, data: payload });
+      await updateMutation.mutateAsync({ id: employee.id, data: payload as UpdateEmployeeInput });
       onClose();
     } catch (err) {
       console.error("Failed to update employee:", err);

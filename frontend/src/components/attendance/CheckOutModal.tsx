@@ -49,10 +49,10 @@ export const CheckOutModal: React.FC<CheckOutModalProps> = ({
       setSelectedEmployeeId("");
       setRemarks("");
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       const message =
-        err?.response?.data?.message ||
-        err?.message ||
+        (err as any)?.response?.data?.message ||
+        (err as any)?.message ||
         "Failed to check out employee.";
       setErrorMsg(message);
     }

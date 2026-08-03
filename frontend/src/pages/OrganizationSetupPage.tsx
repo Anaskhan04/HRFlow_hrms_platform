@@ -72,8 +72,8 @@ export const OrganizationSetupPage: React.FC = () => {
       
       // Auto-hide success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error: any) {
-      setErrorMessage(error?.response?.data?.message || error.message || "An error occurred");
+    } catch (error) {
+      setErrorMessage((error as any)?.response?.data?.message || (error as any).message || "An error occurred");
     }
   };
 

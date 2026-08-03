@@ -87,6 +87,9 @@ model Employee {
   attendances      Attendance[]
   payrolls         Payroll[]
   EmployeeDocument EmployeeDocument[]
+
+  @@index([departmentId])
+  @@index([organizationId])
 }
 
 model Department {
@@ -113,6 +116,8 @@ model User {
   updatedAt    DateTime       @updatedAt
   employee     Employee       @relation(fields: [employeeId], references: [id])
   Notification Notification[]
+
+  @@index([employeeId])
 }
 
 model LeaveType {
@@ -142,6 +147,9 @@ model LeaveRequest {
   approvedBy  String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
 }
 
 model Attendance {
@@ -158,6 +166,7 @@ model Attendance {
   updatedAt    DateTime         @updatedAt
 
   @@unique([employeeId, date])
+  @@index([employeeId])
 }
 
 model Payroll {
@@ -177,6 +186,7 @@ model Payroll {
   updatedAt   DateTime      @updatedAt
 
   @@unique([employeeId, month, year])
+  @@index([employeeId])
 }
 
 model LeaveBalance {

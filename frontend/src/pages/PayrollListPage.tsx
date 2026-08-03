@@ -210,8 +210,7 @@ export const PayrollListPage: React.FC = () => {
           <div className="text-sm">
             <p className="font-semibold">Failed to fetch payroll list</p>
             <p className="text-xs opacity-90">
-              {(error as any)?.message ||
-                "Please verify your connection or refresh the page."}
+              {error instanceof Error ? error.message : "Failed to load data."}
             </p>
           </div>
         </div>

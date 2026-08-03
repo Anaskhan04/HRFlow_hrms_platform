@@ -85,10 +85,10 @@ export const EditPayrollModal: React.FC<EditPayrollModalProps> = ({
         },
       });
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       const message =
-        err?.response?.data?.message ||
-        err?.message ||
+        (err as any)?.response?.data?.message ||
+        (err as any)?.message ||
         "Failed to update payroll record.";
       setErrorMsg(message);
     }

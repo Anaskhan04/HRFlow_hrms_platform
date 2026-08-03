@@ -58,10 +58,10 @@ export const LoginPage: React.FC = () => {
     try {
       await login(data);
       navigate(from, { replace: true });
-    } catch (err: any) {
+    } catch (err) {
       setErrorMsg(
-        err.response?.data?.message ||
-          err.message ||
+        (err as any).response?.data?.message ||
+          (err as any).message ||
           "Invalid email or password. Please try again."
       );
     }

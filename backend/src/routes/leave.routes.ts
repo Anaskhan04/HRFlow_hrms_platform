@@ -31,8 +31,6 @@ router.get("/:id", leaveController.getById);
 
 router.put("/:id", authorizeRole(Role.ADMIN, Role.HR), leaveController.update);
 
-router.patch("/:id", authorizeRole(Role.ADMIN, Role.HR), leaveController.update);
-
 router.delete("/:id", authorizeRole(Role.ADMIN, Role.HR), leaveController.delete);
 
 export default router;

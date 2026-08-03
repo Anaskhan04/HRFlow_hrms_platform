@@ -18,8 +18,6 @@ router.get("/:id", employeeController.getById);
 
 router.put("/:id", authorizeRole(Role.ADMIN, Role.HR), employeeController.update);
 
-router.patch("/:id", authorizeRole(Role.ADMIN, Role.HR), employeeController.update);
-
 router.delete("/:id", authorizeRole(Role.ADMIN, Role.HR), employeeController.delete);
 
 export default router;

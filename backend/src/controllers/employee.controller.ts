@@ -12,7 +12,7 @@ class EmployeeController {
   create = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const data = createEmployeeSchema.parse(req.body);
 
-    const employee = await employeeService.createEmployee(data as any);
+    const employee = await employeeService.createEmployee(data);
 
     res.status(201).json({
       success: true,
@@ -78,7 +78,7 @@ class EmployeeController {
 
     const employee = await employeeService.updateEmployee(
       req.params.id as string,
-      data as any
+      data
     );
 
     res.status(200).json({

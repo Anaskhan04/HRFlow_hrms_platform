@@ -68,9 +68,9 @@ export const SecuritySettingsCard: React.FC = () => {
       setNewPassword("");
       setConfirmPassword("");
       setSuccessMsg("Password changed successfully! Your account is secure.");
-    } catch (err: any) {
+    } catch (err) {
       const message =
-        err?.response?.data?.message || err?.message || "Failed to change password.";
+        (err as any)?.response?.data?.message || (err as any)?.message || "Failed to change password.";
       setErrorMsg(message);
     }
   };

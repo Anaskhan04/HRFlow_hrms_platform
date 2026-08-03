@@ -2,6 +2,7 @@ import apiClient from "./api.client";
 import type {
   LeaveRequest,
   LeaveType,
+  LeaveBalance,
   CreateLeaveInput,
   LeaveQueryParams,
   PaginatedLeaves,
@@ -82,7 +83,7 @@ export const leaveService = {
   },
 
   getLeaveBalances: async (employeeId: string) => {
-    const response = await apiClient.get<{ success: boolean; data: any[] }>(`/leaves/balances/${employeeId}`);
+    const response = await apiClient.get<{ success: boolean; data: LeaveBalance[] }>(`/leaves/balances/${employeeId}`);
     return response.data.data || [];
   },
 

@@ -62,8 +62,8 @@ export const payrollService = {
     const sortField = params.sort || "createdAt";
     const sortOrder = params.order || "desc";
     filtered.sort((a, b) => {
-      let aVal: any = (a as any)[sortField];
-      let bVal: any = (b as any)[sortField];
+      let aVal: any = a[sortField as keyof PayrollRecord];
+      let bVal: any = b[sortField as keyof PayrollRecord];
       if (sortField === "yearMonth") {
         aVal = a.year * 100 + a.month;
         bVal = b.year * 100 + b.month;

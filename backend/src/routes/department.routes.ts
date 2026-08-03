@@ -14,8 +14,6 @@ router.get("/", departmentController.getAll);
 
 router.get("/:id", departmentController.getById);
 
-router.patch("/:id", authorizeRole(Role.ADMIN, Role.HR), departmentController.update);
-
 router.put("/:id", authorizeRole(Role.ADMIN, Role.HR), departmentController.update);
 
 router.delete("/:id", authorizeRole(Role.ADMIN, Role.HR), departmentController.delete);

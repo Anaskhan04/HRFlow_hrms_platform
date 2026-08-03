@@ -74,9 +74,9 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({ user }) => {
         updateUser(response.data);
       }
       setSuccessMsg("Profile information updated successfully.");
-    } catch (err: any) {
+    } catch (err) {
       const message =
-        err?.response?.data?.message || err?.message || "Failed to update profile.";
+        (err as any)?.response?.data?.message || (err as any)?.message || "Failed to update profile.";
       setErrorMsg(message);
     }
   };

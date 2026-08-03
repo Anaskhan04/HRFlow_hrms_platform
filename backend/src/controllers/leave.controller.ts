@@ -16,7 +16,7 @@ class LeaveController {
   create = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const data = createLeaveSchema.parse(req.body);
 
-    const leaveRequest = await leaveService.createLeaveRequest(data as any);
+    const leaveRequest = await leaveService.createLeaveRequest(data);
 
     res.status(201).json({
       success: true,
@@ -84,7 +84,7 @@ class LeaveController {
 
     const leaveRequest = await leaveService.applyForLeave(
       employeeId,
-      data as any
+      data
     );
 
     res.status(201).json({
@@ -216,6 +216,15 @@ class LeaveController {
         return;
       }
 
+      const isPrivileged = canOverrideEmployeeId(req.user?.role) || req.user?.role === Role.MANAGER;
+      if (!isPrivileged && leaveRequest.employeeId !== req.user?.employeeId) {
+        res.status(403).json({
+          success: false,
+          message: "Forbidden. You can only view your own leave requests.",
+        });
+        return;
+      }
+
       res.status(200).json({
         success: true,
         data: leaveRequest,
@@ -240,7 +249,7 @@ class LeaveController {
 
     const leaveRequest = await leaveService.updateLeaveRequest(
       req.params.id as string,
-      data as any
+      data
     );
 
     res.status(200).json({

@@ -10,6 +10,7 @@ import { Label } from "../ui/label";
 import { useOrganizations } from "../../hooks/useOrganizations";
 import { useDepartments } from "../../hooks/useDepartments";
 import { useCreateEmployee } from "../../hooks/useEmployees";
+import type { CreateEmployeeInput } from "../../types";
 
 const addEmployeeSchema = z.object({
   employeeCode: z.string().min(1, "Employee code is required"),
@@ -72,7 +73,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
   const onSubmit = async (data: AddEmployeeFormValues) => {
     try {
-      const payload: any = {
+      const payload: Record<string, any> = {
         employeeCode: data.employeeCode,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -87,7 +88,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       if (data.departmentId && data.departmentId.trim() !== "") payload.departmentId = data.departmentId;
       if (data.salary && !isNaN(Number(data.salary))) payload.salary = Number(data.salary);
 
-      await createMutation.mutateAsync(payload);
+      await createMutation.mutateAsync(payload as CreateEmployeeInput);
       reset();
       onClose();
     } catch (err) {
