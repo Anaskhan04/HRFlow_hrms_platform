@@ -1,11 +1,13 @@
 import React from "react";
-import { User as UserIcon, Shield, Building2, Sparkles, CheckCircle2 } from "lucide-react";
+import { User as UserIcon, Shield, Building2, Sparkles, CheckCircle2, FileText } from "lucide-react";
 import type { User } from "../../types";
+
+type ProfileTab = "profile" | "security" | "preferences" | "documents";
 
 interface ProfileSettingsHeaderProps {
   user: User | null;
-  activeTab: "profile" | "security" | "preferences";
-  onTabChange: (tab: "profile" | "security" | "preferences") => void;
+  activeTab: ProfileTab;
+  onTabChange: (tab: ProfileTab) => void;
 }
 
 export const ProfileSettingsHeader: React.FC<ProfileSettingsHeaderProps> = ({
@@ -75,39 +77,54 @@ export const ProfileSettingsHeader: React.FC<ProfileSettingsHeaderProps> = ({
 
           {/* Navigation Tabs */}
           <div className="flex border-t sm:border-t-0 pt-4 sm:pt-0 w-full sm:w-auto">
-            <div className="grid w-full grid-cols-3 gap-1 rounded-xl bg-muted p-1 sm:w-auto">
+            <div className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 rounded-xl bg-muted p-1 sm:w-auto">
               <button
                 type="button"
                 onClick={() => onTabChange("profile")}
-                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                   activeTab === "profile"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
+                <UserIcon className="h-3.5 w-3.5" />
                 Profile Information
               </button>
               <button
                 type="button"
                 onClick={() => onTabChange("security")}
-                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                   activeTab === "security"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
+                <Shield className="h-3.5 w-3.5" />
                 Security & Password
               </button>
               <button
                 type="button"
                 onClick={() => onTabChange("preferences")}
-                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                   activeTab === "preferences"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
+                <Sparkles className="h-3.5 w-3.5" />
                 Preferences
+              </button>
+              <button
+                type="button"
+                onClick={() => onTabChange("documents")}
+                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  activeTab === "documents"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Documents
               </button>
             </div>
           </div>

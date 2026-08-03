@@ -6,10 +6,11 @@ import { SecuritySettingsCard } from "../components/profile/SecuritySettingsCard
 import { PreferencesCard } from "../components/profile/PreferencesCard";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { EmployeeDocumentManager } from "../components/employees/EmployeeDocumentManager";
 
 export const ProfilePage: React.FC = () => {
   const { user, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"profile" | "security" | "preferences">(
+  const [activeTab, setActiveTab] = useState<"profile" | "security" | "preferences" | "documents">(
     "profile"
   );
 
@@ -63,6 +64,15 @@ export const ProfilePage: React.FC = () => {
       {activeTab === "profile" && <ProfileInfoCard user={user} />}
       {activeTab === "security" && <SecuritySettingsCard />}
       {activeTab === "preferences" && <PreferencesCard />}
+      {activeTab === "documents" && (
+        user.employeeId ? (
+          <EmployeeDocumentManager employeeId={user.employeeId} canManage={true} />
+        ) : (
+          <div className="flex h-32 items-center justify-center rounded-xl border border-dashed text-muted-foreground text-sm">
+            No employee record associated with this account.
+          </div>
+        )
+      )}
     </div>
   );
 };

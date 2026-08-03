@@ -1,6 +1,7 @@
 import { Prisma, LeaveRequest, LeaveStatus } from "@prisma/client";
 import prisma from "../lib/prisma";
 import leaveRepository from "../repositories/leave.repository";
+import notificationService from "./notification.service";
 
 class LeaveService {
   private calculateLeaveDays(startDate: string | Date, endDate: string | Date): number {
@@ -92,7 +93,7 @@ class LeaveService {
       reason: string;
     }
   ): Promise<LeaveRequest> {
-    return this.createLeaveRequest({
+    const created = await this.createLeaveRequest({
       employeeId,
       leaveTypeId: data.leaveTypeId,
       startDate: data.startDate,
@@ -100,6 +101,8 @@ class LeaveService {
       reason: data.reason,
       status: LeaveStatus.PENDING,
     });
+    notificationService.onLeaveApplied(created.id).catch(() => {});
+    return created;
   }
 
   async getMyLeaveRequests(employeeId: string): Promise<LeaveRequest[]> {
@@ -165,6 +168,8 @@ class LeaveService {
       }),
     ]);
 
+    notificationService.onLeaveApproved(updatedLeave.id).catch(() => {});
+
     return updatedLeave;
   }
 
@@ -180,10 +185,12 @@ class LeaveService {
     }
 
     // ✅ Rejection does NOT touch LeaveBalance (balance was never deducted for PENDING requests)
-    return leaveRepository.update(id, {
+    const updated = await leaveRepository.update(id, {
       status: LeaveStatus.REJECTED,
       approvedBy: approverId || null,
     });
+    notificationService.onLeaveRejected(id).catch(() => {});
+    return updated;
   }
 
   async cancelLeaveRequest(id: string, employeeId: string): Promise<LeaveRequest> {

@@ -1,5 +1,6 @@
 import { Payroll, PayrollStatus } from "@prisma/client";
 import payrollRepository from "../repositories/payroll.repository";
+import notificationService from "./notification.service";
 
 class PayrollService {
   async generatePayroll(data: {
@@ -34,7 +35,7 @@ class PayrollService {
       (basicSalary + allowances - deductions).toFixed(2)
     );
 
-    return payrollRepository.create({
+    const created = await payrollRepository.create({
       employeeId: data.employeeId,
       month: data.month,
       year: data.year,
@@ -45,6 +46,9 @@ class PayrollService {
       status: PayrollStatus.GENERATED,
       generatedAt: new Date(),
     });
+
+    notificationService.onPayrollGenerated(created.id).catch(() => {});
+    return created;
   }
 
   async getPayrolls(): Promise<Payroll[]> {
@@ -155,10 +159,12 @@ class PayrollService {
       throw new Error("Payroll is already marked as PAID.");
     }
 
-    return payrollRepository.update(id, {
+    const updated = await payrollRepository.update(id, {
       status: PayrollStatus.PAID,
       paidAt: new Date(),
     });
+    notificationService.onPayrollPaid(id).catch(() => {});
+    return updated;
   }
 }
 

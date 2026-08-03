@@ -19,4 +19,4 @@ router.patch("/:id", authorizeRole(Role.ADMIN, Role.HR), organizationController.
 
 router.delete("/:id", authorizeRole(Role.ADMIN), organizationController.remove);
 
-export default router;
+export default router;

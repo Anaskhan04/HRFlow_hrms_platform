@@ -5,4 +5,6 @@ export * from "./department.types";
 export * from "./leave.types";
 export * from "./attendance.types";
 export * from "./payroll.types";
+export * from "./employee-document.types";
+export * from "./notification.types";
 

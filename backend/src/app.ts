@@ -5,6 +5,8 @@ import cors from 'cors';
 import morgan from 'morgan';
 import organizationRoutes from "./routes/organization.routes";
 import employeeRoutes from "./routes/employee.routes";
+import employeeDocumentRoutes from "./routes/employee-document.routes";
+import notificationRoutes from "./routes/notification.routes";
 import departmentRoutes from "./routes/department.routes";
 import authRoutes from "./routes/auth.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
@@ -29,14 +31,16 @@ app.get('/api/v1/health', (req: Request, res: Response) => {
   });
 });
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use("/api/v1/dashboard", dashboardRoutes);
-app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/organizations", organizationRoutes);
 app.use("/api/v1/employees", employeeRoutes);
+app.use("/api/v1/employee-documents", employeeDocumentRoutes);
 app.use("/api/v1/departments", departmentRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/leaves", leaveRoutes);
 app.use("/api/v1/attendance", attendanceRoutes);
 app.use("/api/v1/payroll", payrollRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

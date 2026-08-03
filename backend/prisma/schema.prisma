@@ -65,27 +65,28 @@ model Organization {
 }
 
 model Employee {
-  id             String         @id @default(uuid())
-  employeeCode   String         @unique
-  firstName      String
-  lastName       String
-  email          String         @unique
-  phone          String?
-  designation    String
-  joiningDate    DateTime
-  salary         Float?
-  organizationId String
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  departmentId   String?
-  status         EmployeeStatus @default(ACTIVE)
-  department     Department?    @relation(fields: [departmentId], references: [id])
-  organization   Organization   @relation(fields: [organizationId], references: [id])
-  user           User?
-  leaveRequests  LeaveRequest[]
-  leaveBalances  LeaveBalance[]
-  attendances    Attendance[]
-  payrolls       Payroll[]
+  id               String             @id @default(uuid())
+  employeeCode     String             @unique
+  firstName        String
+  lastName         String
+  email            String             @unique
+  phone            String?
+  designation      String
+  joiningDate      DateTime
+  salary           Float?
+  organizationId   String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  departmentId     String?
+  status           EmployeeStatus     @default(ACTIVE)
+  department       Department?        @relation(fields: [departmentId], references: [id])
+  organization     Organization       @relation(fields: [organizationId], references: [id])
+  user             User?
+  leaveRequests    LeaveRequest[]
+  leaveBalances    LeaveBalance[]
+  attendances      Attendance[]
+  payrolls         Payroll[]
+  EmployeeDocument EmployeeDocument[]
 }
 
 model Department {
@@ -102,15 +103,16 @@ model Department {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  password   String
-  role       Role     @default(EMPLOYEE)
-  employeeId String   @unique
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  employee   Employee @relation(fields: [employeeId], references: [id])
+  id           String         @id @default(uuid())
+  email        String         @unique
+  password     String
+  role         Role           @default(EMPLOYEE)
+  employeeId   String         @unique
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  employee     Employee       @relation(fields: [employeeId], references: [id])
+  Notification Notification[]
 }
 
 model LeaveType {
@@ -189,4 +191,62 @@ model LeaveBalance {
   updatedAt   DateTime  @updatedAt
 
   @@unique([employeeId, leaveTypeId])
+}
+
+enum DocumentCategory {
+  IDENTIFICATION
+  EDUCATION
+  EXPERIENCE
+  CONTRACT
+  PAYSLIP
+  TAX
+  MEDICAL
+  OTHER
+}
+
+enum NotificationType {
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  LEAVE_APPLIED
+  PAYROLL_GENERATED
+  PAYROLL_PAID
+  DOCUMENT_UPLOADED
+  SYSTEM
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       NotificationType @default(SYSTEM)
+  title      String
+  message    String?
+  entityType String?          @map("entity_type")
+  entityId   String?          @map("entity_id")
+  isRead     Boolean          @default(false)
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model EmployeeDocument {
+  id           String           @id @default(uuid())
+  employeeId   String
+  employee     Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  fileName     String
+  originalName String
+  mimeType     String
+  category     DocumentCategory @default(OTHER)
+  size         Int
+  storedPath   String
+  description  String?
+  uploadedById String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([employeeId])
+  @@index([employeeId, category])
 }
