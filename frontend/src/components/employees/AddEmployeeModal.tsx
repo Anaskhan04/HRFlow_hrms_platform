@@ -80,7 +80,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         email: data.email,
         designation: data.designation,
         organizationId: data.organizationId,
-        joiningDate: data.joiningDate,
+        joiningDate: new Date(data.joiningDate).toISOString(),
         status: data.status,
       };
 

@@ -9,7 +9,7 @@ const router = Router();
 router.use(authenticate);
 
 router.post("/generate", authorizeRole(Role.ADMIN, Role.HR), payrollController.generate);
-router.get("/export", payrollController.export);
+router.get("/export", authorizeRole(Role.ADMIN, Role.HR), payrollController.export);
 router.get("/", payrollController.getAll);
 router.get("/:id", payrollController.getById);
 router.put("/:id", authorizeRole(Role.ADMIN, Role.HR), payrollController.update);

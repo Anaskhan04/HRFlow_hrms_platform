@@ -6,7 +6,9 @@ import employeeDocumentRepository from "../repositories/employee-document.reposi
 import employeeRepository from "../repositories/employee.repository";
 import { UploadDocumentMetaInput, UpdateDocumentMetaInput } from "../validators/employee-document.validator";
 
-// __dirname and __filename are available in CommonJS
+// ESM alternatives for __dirname and __filename
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const UPLOAD_ROOT = path.resolve(__dirname, "../../..", "uploads", "employee-documents");
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;

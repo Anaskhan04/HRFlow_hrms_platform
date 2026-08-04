@@ -7,6 +7,7 @@ import {
   updateEmployeeSchema,
 } from "../validators/employee.validator";
 import { asyncHandler } from "../utils/asyncHandler";
+import { Role } from "@prisma/client";
 
 class EmployeeController {
   create = asyncHandler(async (req: Request, res: Response): Promise<void> => {
@@ -23,6 +24,14 @@ class EmployeeController {
 
   getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const result = await employeeService.getEmployees(req.query);
+
+    const isPrivileged = req.user?.role === Role.ADMIN || req.user?.role === Role.HR;
+    if (!isPrivileged) {
+      result.employees = result.employees.map((emp) => {
+        const { salary, ...rest } = emp;
+        return rest as any;
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -55,9 +64,16 @@ class EmployeeController {
       return;
     }
 
+    let returnedEmployee = employee;
+    const isPrivileged = req.user?.role === Role.ADMIN || req.user?.role === Role.HR;
+    if (!isPrivileged && employee.id !== req.user?.employeeId) {
+      const { salary, ...rest } = employee;
+      returnedEmployee = rest as any;
+    }
+
     res.status(200).json({
       success: true,
-      data: employee,
+      data: returnedEmployee,
     });
   });
 

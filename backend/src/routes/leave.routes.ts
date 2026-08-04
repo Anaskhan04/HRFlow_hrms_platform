@@ -10,15 +10,16 @@ router.use(authenticate);
 
 router.post("/", authorizeRole(Role.ADMIN, Role.HR), leaveController.create);
 
-router.get("/export", leaveController.export);
+router.get("/export", authorizeRole(Role.ADMIN, Role.HR), leaveController.export);
 
-router.get("/", leaveController.getAll);
+router.get("/", authorizeRole(Role.ADMIN, Role.HR, Role.MANAGER), leaveController.getAll);
 
 router.post("/apply", leaveController.apply);
 
 router.get("/types", leaveController.getTypes);
 router.get("/my-leaves", leaveController.getMyLeaves);
 
+router.get("/balances", leaveController.getBalances);
 router.get("/balances/:employeeId", leaveController.getBalances);
 
 router.patch("/:id/approve", authorizeRole(Role.ADMIN, Role.HR, Role.MANAGER), leaveController.approve);

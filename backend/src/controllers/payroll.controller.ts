@@ -3,6 +3,7 @@ import payrollService from "../services/payroll.service";
 import exportService from "../services/export.service";
 import { generatePayrollSchema } from "../validators/payroll.validator";
 import { asyncHandler } from "../utils/asyncHandler";
+import { Role } from "@prisma/client";
 
 class PayrollController {
   generate = asyncHandler(async (req: Request, res: Response): Promise<void> => {
@@ -24,9 +25,14 @@ class PayrollController {
     const month = req.query.month && req.query.month !== "ALL" ? parseInt(req.query.month as string, 10) : undefined;
     const year = req.query.year && req.query.year !== "ALL" ? parseInt(req.query.year as string, 10) : undefined;
     const status = req.query.status as any;
-    const employeeId = req.query.employeeId as string;
+    let employeeId = req.query.employeeId as string;
     const sort = req.query.sort as string;
     const order = req.query.order as string;
+
+    const isPrivileged = req.user?.role === Role.ADMIN || req.user?.role === Role.HR;
+    if (!isPrivileged) {
+      employeeId = req.user?.employeeId as string;
+    }
 
     const result = await payrollService.getAllPayrolls({
       page,
@@ -107,6 +113,15 @@ class PayrollController {
       res.status(404).json({
         success: false,
         message: "Payroll not found.",
+      });
+      return;
+    }
+
+    const isPrivileged = req.user?.role === Role.ADMIN || req.user?.role === Role.HR;
+    if (!isPrivileged && payroll.employeeId !== req.user?.employeeId) {
+      res.status(403).json({
+        success: false,
+        message: "Forbidden. You can only view your own payroll.",
       });
       return;
     }

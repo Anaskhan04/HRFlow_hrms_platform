@@ -125,7 +125,7 @@ class LeaveService {
     }
 
     if (leaveRequest.status !== LeaveStatus.PENDING) {
-      throw new Error("Only pending leave requests can be approved.");
+      throw new Error("Leave request cannot be approved because it is already approved or rejected.");
     }
 
     const requestedDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate);

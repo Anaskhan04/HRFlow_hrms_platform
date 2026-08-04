@@ -10,7 +10,7 @@ router.use(authenticate);
 
 router.post("/", authorizeRole(Role.ADMIN, Role.HR), employeeController.create);
 
-router.get("/export", employeeController.export);
+router.get("/export", authorizeRole(Role.ADMIN, Role.HR), employeeController.export);
 
 router.get("/", employeeController.getAll);
 
