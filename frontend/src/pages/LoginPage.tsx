@@ -69,7 +69,7 @@ export const LoginPage: React.FC = () => {
 
   const fillDemo = (email: string) => {
     setValue("email", email, { shouldValidate: true });
-    setValue("password", "Secret123!", { shouldValidate: true });
+    setValue("password", "Admin@123", { shouldValidate: true });
   };
 
   const isLoading = isSubmitting || isAuthLoading;
