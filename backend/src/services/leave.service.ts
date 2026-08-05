@@ -201,13 +201,13 @@ class LeaveService {
     }
 
     if (leaveRequest.employeeId !== employeeId) {
-      throw new Error("You can only cancel your own leave requests.");
+      throw new Error("Leave request cannot be cancelled because it belongs to another employee.");
     }
 
     const status = leaveRequest.status;
 
     if (status !== LeaveStatus.PENDING && status !== LeaveStatus.APPROVED) {
-      throw new Error("Only pending or approved leave requests can be cancelled.");
+      throw new Error("Leave request cannot be cancelled because it is not in pending or approved status.");
     }
 
     const requestedDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate);
