@@ -87,7 +87,7 @@ export const NotificationDropdown: React.FC = () => {
       </Button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[380px] max-w-[95vw] overflow-hidden rounded-2xl border border-slate-200 bg-background shadow-2xl dark:border-slate-800 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 mt-2 w-[380px] max-w-[95vw] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <div className="flex items-center gap-2">
               <Bell className="h-4 w-4 text-primary" />
