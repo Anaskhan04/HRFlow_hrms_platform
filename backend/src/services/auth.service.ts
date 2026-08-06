@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { User, EmployeeStatus } from "@prisma/client";
 import { Role } from "@prisma/client";
 import authRepository from "../repositories/auth.repository";
 import employeeRepository from "../repositories/employee.repository";
@@ -117,7 +117,13 @@ class AuthService {
       throw new Error("Invalid email or password.");
     }
 
-    // 4. Generate JWT using jwt.ts
+    // 4. Reject if User account is inactive or linked Employee is not ACTIVE
+    const employee = (user as any).employee;
+    if (!user.isActive || (employee && employee.status !== EmployeeStatus.ACTIVE)) {
+      throw new Error("Invalid email or password.");
+    }
+
+    // 5. Generate JWT using jwt.ts
     const token = generateToken({
       userId: user.id,
       email: user.email,

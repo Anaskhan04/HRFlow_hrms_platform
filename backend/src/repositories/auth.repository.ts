@@ -52,6 +52,13 @@ async findByEmailWithPassword(email: string): Promise<User | null> {
       where: { employeeId },
     });
   }
+
+  async updateIsActiveByEmployeeId(employeeId: string, isActive: boolean) {
+    return prisma.user.updateMany({
+      where: { employeeId },
+      data: { isActive },
+    });
+  }
 }
 
 export default new AuthRepository();

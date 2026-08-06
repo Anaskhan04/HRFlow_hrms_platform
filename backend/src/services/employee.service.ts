@@ -1,8 +1,9 @@
-import { Prisma, Employee } from "@prisma/client";
+import { Prisma, Employee, EmployeeStatus } from "@prisma/client";
 import employeeRepository, {
   EmployeeQueryParams,
 } from "../repositories/employee.repository";
 import organizationRepository from "../repositories/organization.repository";
+import authRepository from "../repositories/auth.repository";
 
 class EmployeeService {
   async createEmployee(
@@ -88,7 +89,24 @@ class EmployeeService {
       }
     }
 
-    return employeeRepository.update(id, data);
+    const updatedEmployee = await employeeRepository.update(id, data);
+
+    const statusVal = data.status as any;
+    if (
+      statusVal &&
+      (statusVal === EmployeeStatus.INACTIVE ||
+        statusVal === EmployeeStatus.TERMINATED ||
+        statusVal === "INACTIVE" ||
+        statusVal === "TERMINATED" ||
+        statusVal.set === EmployeeStatus.INACTIVE ||
+        statusVal.set === EmployeeStatus.TERMINATED ||
+        statusVal.set === "INACTIVE" ||
+        statusVal.set === "TERMINATED")
+    ) {
+      await authRepository.updateIsActiveByEmployeeId(id, false);
+    }
+
+    return updatedEmployee;
   }
 
   async deleteEmployee(id: string): Promise<Employee> {
