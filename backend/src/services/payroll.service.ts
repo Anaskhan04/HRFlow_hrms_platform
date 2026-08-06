@@ -28,7 +28,7 @@ class PayrollService {
       );
     }
 
-    const basicSalary = data.basicSalary ?? (employee.salary || 0);
+    const basicSalary = data.basicSalary ?? parseFloat(((employee.salary || 0) / 12).toFixed(2));
     const allowances = data.allowances ?? 0;
     const deductions = data.deductions ?? 0;
     const netSalary = parseFloat(
