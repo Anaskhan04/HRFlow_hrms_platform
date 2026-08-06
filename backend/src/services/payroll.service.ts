@@ -122,6 +122,10 @@ class PayrollService {
       throw new Error("Payroll not found.");
     }
 
+    if (payroll.status === PayrollStatus.PAID) {
+      throw new Error("PAID payroll records cannot be modified.");
+    }
+
     const basicSalary = data.basicSalary ?? payroll.basicSalary;
     const allowances = data.allowances ?? payroll.allowances;
     const deductions = data.deductions ?? payroll.deductions;
