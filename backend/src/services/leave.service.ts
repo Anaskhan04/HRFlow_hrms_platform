@@ -141,10 +141,16 @@ class LeaveService {
       throw new Error("Insufficient leave balance to approve this request.");
     }
 
-    // ✅ FIX #1: Wrap balance deduction + leave status update in an atomic Prisma transaction
-    // If either operation fails, neither is applied.
-    const [, updatedLeave] = await prisma.$transaction([
-      prisma.leaveBalance.update({
+    // ✅ FIX #1: Atomic balance deduction + conditional status update.
+    // Uses an interactive transaction so that:
+    //   - The LeaveRequest update is conditional on status still being PENDING
+    //     at DB write time (prevents concurrent double-approval).
+    //   - If the conditional write matches 0 rows (another request won the race),
+    //     we throw inside the transaction body, which causes Prisma to roll back
+    //     the balance decrement that already executed within this same transaction.
+    const updatedLeave = await prisma.$transaction(async (tx) => {
+      // 1. Decrement balance first.
+      await tx.leaveBalance.update({
         where: {
           employeeId_leaveTypeId: {
             employeeId: leaveRequest.employeeId,
@@ -155,19 +161,34 @@ class LeaveService {
           balance: { decrement: requestedDays },
           used: { increment: requestedDays },
         },
-      }),
-      prisma.leaveRequest.update({
-        where: { id },
+      });
+
+      // 2. Conditionally update the LeaveRequest only if it is still PENDING.
+      //    If another concurrent approval already committed, count will be 0
+      //    and the balance decrement above is rolled back automatically.
+      const { count } = await tx.leaveRequest.updateMany({
+        where: { id, status: LeaveStatus.PENDING },
         data: {
           status: LeaveStatus.APPROVED,
           approvedBy: approverId || null,
         },
+      });
+
+      if (count === 0) {
+        throw new Error(
+          "Leave request cannot be approved because it is already approved or rejected."
+        );
+      }
+
+      // 3. Re-fetch with relations so the return shape matches the original.
+      return tx.leaveRequest.findUniqueOrThrow({
+        where: { id },
         include: {
           employee: true,
           leaveType: true,
         },
-      }),
-    ]);
+      });
+    });
 
     notificationService.onLeaveApproved(updatedLeave.id).catch(() => {});
 
