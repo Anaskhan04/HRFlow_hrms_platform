@@ -171,7 +171,18 @@ class AttendanceController {
   });
 
   export = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const queryParams = { ...req.query, limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 1000 };
+    let employeeId: string | undefined;
+    if (isPrivilegedRole(req.user?.role)) {
+      employeeId = req.query.employeeId as string | undefined;
+    } else {
+      employeeId = req.user?.employeeId;
+    }
+
+    const queryParams = { 
+      ...req.query, 
+      employeeId,
+      limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 1000 
+    };
     const result = await attendanceService.getAllAttendance(queryParams as any);
     const buffer = await exportService.exportAttendance(result.attendance);
 
