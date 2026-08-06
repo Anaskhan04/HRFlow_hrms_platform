@@ -236,9 +236,12 @@ class LeaveService {
 
     // If the leave being cancelled was already APPROVED, we must REFUND the deducted balance
     if (status === LeaveStatus.APPROVED) {
-      // ✅ FIX #2: Approved cancellation -> refund balance + used atomically
-      const [, updatedLeave] = await prisma.$transaction([
-        prisma.leaveBalance.update({
+      // ✅ FIX #2: Approved cancellation -> refund balance + used atomically,
+      // with a conditional status write that guards against concurrent double-refund.
+      // Using an interactive transaction so a throw inside rolls back the refund.
+      const updatedLeave = await prisma.$transaction(async (tx) => {
+        // 1. Refund the balance first.
+        await tx.leaveBalance.update({
           where: {
             employeeId_leaveTypeId: {
               employeeId: leaveRequest.employeeId,
@@ -249,16 +252,31 @@ class LeaveService {
             balance: { increment: requestedDays },
             used: { decrement: requestedDays },
           },
-        }),
-        prisma.leaveRequest.update({
-          where: { id },
+        });
+
+        // 2. Conditionally cancel only if the Leave is still APPROVED at DB write time.
+        //    If another concurrent cancellation already committed, count will be 0
+        //    and the refund above is rolled back automatically.
+        const { count } = await tx.leaveRequest.updateMany({
+          where: { id, status: LeaveStatus.APPROVED },
           data: { status: LeaveStatus.CANCELLED },
+        });
+
+        if (count === 0) {
+          throw new Error(
+            "Leave request cannot be cancelled because it is not in pending or approved status."
+          );
+        }
+
+        // 3. Re-fetch with relations so the return shape matches the original.
+        return tx.leaveRequest.findUniqueOrThrow({
+          where: { id },
           include: {
             employee: true,
             leaveType: true,
           },
-        }),
-      ]);
+        });
+      });
 
       return updatedLeave;
     }
