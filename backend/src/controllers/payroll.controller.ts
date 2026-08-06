@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import payrollService from "../services/payroll.service";
 import exportService from "../services/export.service";
-import { generatePayrollSchema } from "../validators/payroll.validator";
+import { generatePayrollSchema, updatePayrollSchema } from "../validators/payroll.validator";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Role } from "@prisma/client";
 
@@ -83,9 +83,10 @@ class PayrollController {
   });
 
   update = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const data = updatePayrollSchema.parse(req.body);
     const payroll = await payrollService.updatePayroll(
       req.params.id as string,
-      req.body
+      data
     );
 
     res.status(200).json({
