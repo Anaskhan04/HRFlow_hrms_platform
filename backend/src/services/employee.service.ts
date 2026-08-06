@@ -116,7 +116,16 @@ class EmployeeService {
       throw new Error("Employee not found.");
     }
 
-    return employeeRepository.delete(id);
+    // Soft-deactivate: preserve all historical data (payroll, attendance, leave,
+    // documents, User record) by terminating rather than hard-deleting.
+    const terminated = await employeeRepository.update(id, {
+      status: EmployeeStatus.TERMINATED,
+    });
+
+    // Deactivate the linked User account so the employee cannot log in.
+    await authRepository.updateIsActiveByEmployeeId(id, false);
+
+    return terminated;
   }
 }
 
