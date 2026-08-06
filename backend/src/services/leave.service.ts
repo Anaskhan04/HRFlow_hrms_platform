@@ -64,10 +64,11 @@ class LeaveService {
       }
     }
 
-    // Default status = PENDING if not specified
-    if (!("status" in data) || !data.status) {
-      (data as any).status = LeaveStatus.PENDING;
-    }
+    // Always force status to PENDING on generic create — workflow transitions
+    // (approve / reject / cancel) are the only permitted way to change status.
+    // Also strip approvedBy so it cannot be set by the caller.
+    (data as any).status = LeaveStatus.PENDING;
+    delete (data as any).approvedBy;
 
     return leaveRepository.create(data);
   }
@@ -256,6 +257,11 @@ class LeaveService {
     if (!existingLeaveRequest) {
       throw new Error("LeaveRequest not found.");
     }
+
+    // Strip workflow-controlled fields — status and approvedBy must only be
+    // changed through the dedicated approve / reject / cancel methods.
+    delete (data as any).status;
+    delete (data as any).approvedBy;
 
     // ✅ FIX #3: Prevent edits to date/type/employee on non-PENDING leaves
     // to avoid LeaveBalance inconsistency.

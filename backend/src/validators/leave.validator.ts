@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { LeaveStatus } from "@prisma/client";
 
 const baseLeaveSchema = z.object({
   employeeId: z.string().min(1, "Employee ID is required"),
@@ -11,7 +10,6 @@ const baseLeaveSchema = z.object({
     message: "Valid end date is required",
   }),
   reason: z.string().min(1, "Reason is required"),
-  status: z.nativeEnum(LeaveStatus).optional(),
 });
 
 export const createLeaveSchema = baseLeaveSchema.refine(
