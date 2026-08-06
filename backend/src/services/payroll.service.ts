@@ -137,7 +137,6 @@ class PayrollService {
       deductions,
       netSalary,
     };
-    if (data.status) updateData.status = data.status;
     if (data.month) updateData.month = data.month;
     if (data.year) updateData.year = data.year;
 
