@@ -67,9 +67,9 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const fillDemo = (email: string) => {
+  const fillDemo = (email: string, password = "Admin@123") => {
     setValue("email", email, { shouldValidate: true });
-    setValue("password", "Admin@123", { shouldValidate: true });
+    setValue("password", password, { shouldValidate: true });
   };
 
   const isLoading = isSubmitting || isAuthLoading;
@@ -254,7 +254,7 @@ export const LoginPage: React.FC = () => {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => fillDemo("admin@hrflow.com")}
+                onClick={() => fillDemo("admin@hrflow.com", "Admin@123")}
                 className="text-xs h-8"
               >
                 Admin Demo
@@ -263,7 +263,7 @@ export const LoginPage: React.FC = () => {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => fillDemo("hr@hrflow.com")}
+                onClick={() => fillDemo("hr@hrflow.com", "Hr@123")}
                 className="text-xs h-8"
               >
                 HR Demo
