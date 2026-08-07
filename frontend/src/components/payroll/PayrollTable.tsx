@@ -231,15 +231,17 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                         <Edit2 className="h-4 w-4" />
                       </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(record)}
-                        className="h-8 w-8 text-muted-foreground hover:text-red-500"
-                        title="Delete Payroll"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {record.status !== "PAID" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(record)}
+                          className="h-8 w-8 text-muted-foreground hover:text-red-500"
+                          title="Delete Payroll"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>

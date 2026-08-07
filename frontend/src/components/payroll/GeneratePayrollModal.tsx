@@ -49,7 +49,8 @@ export const GeneratePayrollModal: React.FC<GeneratePayrollModalProps> = ({
     if (selectedEmployeeId) {
       const emp = employees.find((e) => e.id === selectedEmployeeId);
       if (emp && emp.salary) {
-        setBasicSalary(emp.salary.toString());
+        const monthlySalary = parseFloat((emp.salary / 12).toFixed(2));
+        setBasicSalary(monthlySalary.toString());
       }
     }
   }, [selectedEmployeeId, employees]);

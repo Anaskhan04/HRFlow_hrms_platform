@@ -148,6 +148,9 @@ class PayrollService {
     if (!payroll) {
       throw new Error("Payroll not found.");
     }
+    if (payroll.status === PayrollStatus.PAID) {
+      throw new Error("PAID payroll records cannot be deleted.");
+    }
     return payrollRepository.delete(id);
   }
 
