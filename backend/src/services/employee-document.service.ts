@@ -53,17 +53,28 @@ class EmployeeDocumentService {
     const storedPath = path.join(employeeDir, storedName);
     fs.renameSync(file.path, storedPath);
 
-    return employeeDocumentRepository.create({
-      employeeId: meta.employeeId,
-      fileName: storedName,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-      category: (meta.category as DocumentCategory) || "OTHER",
-      size: file.size,
-      storedPath,
-      description: meta.description || undefined,
-      uploadedById,
-    });
+    try {
+      return await employeeDocumentRepository.create({
+        employeeId: meta.employeeId,
+        fileName: storedName,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        category: (meta.category as DocumentCategory) || "OTHER",
+        size: file.size,
+        storedPath,
+        description: meta.description || undefined,
+        uploadedById,
+      });
+    } catch (err) {
+      if (fs.existsSync(storedPath)) {
+        try {
+          fs.unlinkSync(storedPath);
+        } catch {
+          /* noop */
+        }
+      }
+      throw err;
+    }
   }
 
   async getDocumentsByEmployee(
@@ -112,13 +123,11 @@ class EmployeeDocumentService {
     const existing = await employeeDocumentRepository.findById(id);
     if (!existing) throw new Error("Document not found.");
 
-    await employeeDocumentRepository.delete(id);
-
-    try {
-      if (fs.existsSync(existing.storedPath)) fs.unlinkSync(existing.storedPath);
-    } catch {
-      /* noop */
+    if (fs.existsSync(existing.storedPath)) {
+      fs.unlinkSync(existing.storedPath);
     }
+
+    await employeeDocumentRepository.delete(id);
   }
 
   canActOn(

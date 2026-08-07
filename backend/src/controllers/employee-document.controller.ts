@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import fs from "node:fs";
 import { Role } from "@prisma/client";
 import employeeDocumentService from "../services/employee-document.service";
 import {
@@ -15,27 +16,43 @@ class EmployeeDocumentController {
       return;
     }
 
-    const meta = uploadDocumentMetaSchema.parse(req.body);
-    const requester = req.user!;
-
-    if (requester.role !== Role.ADMIN && requester.role !== Role.HR) {
-      if (!requester.employeeId || requester.employeeId !== meta.employeeId) {
-        res.status(403).json({ success: false, message: "Forbidden: you may only upload documents for yourself." });
-        return;
+    const cleanupTempFile = () => {
+      if (file && file.path && fs.existsSync(file.path)) {
+        try {
+          fs.unlinkSync(file.path);
+        } catch {
+          /* noop */
+        }
       }
+    };
+
+    try {
+      const meta = uploadDocumentMetaSchema.parse(req.body);
+      const requester = req.user!;
+
+      if (requester.role !== Role.ADMIN && requester.role !== Role.HR) {
+        if (!requester.employeeId || requester.employeeId !== meta.employeeId) {
+          cleanupTempFile();
+          res.status(403).json({ success: false, message: "Forbidden: you may only upload documents for yourself." });
+          return;
+        }
+      }
+
+      const document = await employeeDocumentService.uploadDocument(
+        meta,
+        file,
+        requester.userId
+      );
+
+      res.status(201).json({
+        success: true,
+        message: "Document uploaded successfully.",
+        data: document,
+      });
+    } catch (error) {
+      cleanupTempFile();
+      throw error;
     }
-
-    const document = await employeeDocumentService.uploadDocument(
-      meta,
-      file,
-      requester.userId
-    );
-
-    res.status(201).json({
-      success: true,
-      message: "Document uploaded successfully.",
-      data: document,
-    });
   });
 
   listByEmployee = asyncHandler(async (req: Request, res: Response): Promise<void> => {
