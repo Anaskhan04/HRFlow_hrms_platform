@@ -4,6 +4,7 @@ import employeeRepository, {
 } from "../repositories/employee.repository";
 import organizationRepository from "../repositories/organization.repository";
 import authRepository from "../repositories/auth.repository";
+import departmentRepository from "../repositories/department.repository";
 
 class EmployeeService {
   async createEmployee(
@@ -35,6 +36,18 @@ class EmployeeService {
 
       if (!existingOrg) {
         throw new Error("Organization not found.");
+      }
+    }
+    const reqDepartmentId = (data as any).departmentId;
+    const reqOrganizationId = (data as any).organizationId;
+
+    if (reqDepartmentId && reqOrganizationId) {
+      const department = await departmentRepository.findById(reqDepartmentId as string);
+      if (!department) {
+        throw new Error("Department not found.");
+      }
+      if (department.organizationId !== reqOrganizationId) {
+        throw new Error("Department does not belong to the specified organization.");
       }
     }
 
@@ -86,6 +99,19 @@ class EmployeeService {
 
       if (!existingOrg) {
         throw new Error("Organization not found.");
+      }
+    }
+
+    const resultingOrganizationId = ((data as any).organizationId as string) || existingEmployee.organizationId;
+    const resultingDepartmentId = (data as any).departmentId !== undefined ? ((data as any).departmentId as string | null) : existingEmployee.departmentId;
+
+    if (resultingDepartmentId) {
+      const department = await departmentRepository.findById(resultingDepartmentId);
+      if (!department) {
+        throw new Error("Department not found.");
+      }
+      if (department.organizationId !== resultingOrganizationId) {
+        throw new Error("Department does not belong to the specified organization.");
       }
     }
 
