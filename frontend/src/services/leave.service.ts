@@ -93,7 +93,7 @@ export const leaveService = {
   },
 
   applyLeave: async (data: CreateLeaveInput): Promise<LeaveRequest> => {
-    const response = await apiClient.post<{ success: boolean; data: LeaveRequest }>("/leaves", data);
+    const response = await apiClient.post<{ success: boolean; data: LeaveRequest }>("/leaves/apply", data);
     return response.data.data;
   },
 
