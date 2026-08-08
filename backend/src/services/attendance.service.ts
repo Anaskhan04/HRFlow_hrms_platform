@@ -117,6 +117,24 @@ class AttendanceService {
       },
     };
   }
+
+  async getAllAttendanceForExport(params: {
+    search?: string;
+    status?: AttendanceStatus;
+    date?: string;
+    employeeId?: string;
+  }): Promise<Attendance[]> {
+    const dateObj = params.date ? new Date(params.date) : undefined;
+
+    const { attendance } = await attendanceRepository.findAll({
+      search: params.search,
+      status: params.status,
+      date: dateObj && !isNaN(dateObj.getTime()) ? dateObj : undefined,
+      employeeId: params.employeeId,
+    });
+
+    return attendance;
+  }
 }
 
 export default new AttendanceService();

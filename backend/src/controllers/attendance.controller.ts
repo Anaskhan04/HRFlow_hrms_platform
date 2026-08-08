@@ -181,10 +181,9 @@ class AttendanceController {
     const queryParams = { 
       ...req.query, 
       employeeId,
-      limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 1000 
     };
-    const result = await attendanceService.getAllAttendance(queryParams as any);
-    const buffer = await exportService.exportAttendance(result.attendance);
+    const attendance = await attendanceService.getAllAttendanceForExport(queryParams as any);
+    const buffer = await exportService.exportAttendance(attendance);
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", "attachment; filename=attendance.xlsx");
