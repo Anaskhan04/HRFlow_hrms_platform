@@ -131,7 +131,7 @@ Example:
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/hrflow?schema=public"
 DATABASE_URL_UNPOOLED="postgresql://postgres:postgres@localhost:5432/hrflow?schema=public"
-JWT_SECRET="REDACTED_JWT_SECRET"
+JWT_SECRET="replace-with-a-secure-secret-key-at-least-32-chars"
 JWT_EXPIRES_IN="7d"
 PORT=5000
 ```
