@@ -1,4 +1,4 @@
-import apiClient from "./api.client";
+import apiClient, { API_BASE_URL } from "./api.client";
 import type {
   EmployeeDocument,
   DocumentCategory,
@@ -50,7 +50,7 @@ export const employeeDocumentService = {
   },
 
   getDownloadUrl: (id: string): string => {
-    const base = (import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
+    const base = API_BASE_URL.replace(/\/$/, "");
     return `${base}/employee-documents/${id}/download`;
   },
 

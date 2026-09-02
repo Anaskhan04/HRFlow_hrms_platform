@@ -4,7 +4,8 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Accept VITE_API_URL build argument so it can be baked into static bundle
-ARG VITE_API_URL=http://localhost:5000/api/v1
+# Defaults to relative /api/v1 to route through Nginx reverse proxy
+ARG VITE_API_URL=/api/v1
 ENV VITE_API_URL=$VITE_API_URL
 
 # Copy package files
