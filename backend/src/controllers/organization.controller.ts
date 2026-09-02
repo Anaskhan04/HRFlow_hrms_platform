@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Role } from "@prisma/client";
 
 import organizationService from "../services/organization.service";
 import {
@@ -21,7 +22,11 @@ class OrganizationController {
   });
 
   getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const data = await organizationService.getOrganizations();
+    const isPrivileged = req.user?.role === Role.ADMIN || req.user?.role === Role.HR;
+    let data = await organizationService.getOrganizations();
+    if (!isPrivileged && req.user?.organizationId) {
+      data = data.filter(org => org.id === req.user?.organizationId);
+    }
 
     res.json({
       success: true,

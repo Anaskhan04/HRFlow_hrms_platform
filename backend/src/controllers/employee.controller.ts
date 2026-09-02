@@ -23,7 +23,11 @@ class EmployeeController {
   });
 
   getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const result = await employeeService.getEmployees(req.query);
+    const query = { ...req.query };
+    if (req.user?.organizationId) {
+      query.organizationId = req.user.organizationId;
+    }
+    const result = await employeeService.getEmployees(query);
 
     const isPrivileged = req.user?.role === Role.ADMIN || req.user?.role === Role.HR;
     if (!isPrivileged) {
@@ -43,6 +47,9 @@ class EmployeeController {
   export = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     // Fetch employees with the exact same filters, but we might want all of them for export or limit to 1000
     const queryParams = { ...req.query, limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 1000 };
+    if (req.user?.organizationId) {
+      (queryParams as any).organizationId = req.user.organizationId;
+    }
     const result = await employeeService.getEmployees(queryParams as any);
     const buffer = await exportService.exportEmployees(result.employees);
 

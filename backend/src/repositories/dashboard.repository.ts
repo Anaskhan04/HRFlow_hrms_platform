@@ -3,15 +3,41 @@ import {
   EmployeeStatus,
   AttendanceStatus,
   LeaveStatus,
+  Role,
 } from "@prisma/client";
+import { TokenPayload } from "../utils/jwt";
 
 class DashboardRepository {
+  private getScopes(user: TokenPayload) {
+    const isManager = user.role === Role.MANAGER;
+    
+    // For queries directly on Employee
+    const empWhere = isManager 
+      ? { departmentId: user.departmentId || undefined } 
+      : { organizationId: user.organizationId || undefined };
+
+    // For queries on models that belong to Employee (Attendance, LeaveRequest, Payroll)
+    const empRelWhere = isManager 
+      ? { employee: { departmentId: user.departmentId || undefined } } 
+      : { employee: { organizationId: user.organizationId || undefined } };
+
+    // For queries on Department
+    const deptWhere = isManager
+      ? { id: user.departmentId || undefined }
+      : { organizationId: user.organizationId || undefined };
+
+    return { empWhere, empRelWhere, deptWhere };
+  }
+
   async getSummaryStats(
     today: Date,
     now: Date,
     month: number,
-    year: number
+    year: number,
+    user: TokenPayload
   ) {
+    const { empWhere, empRelWhere, deptWhere } = this.getScopes(user);
+
     const [
       totalEmployees,
       activeEmployees,
@@ -22,26 +48,27 @@ class DashboardRepository {
       pendingLeaveRequests,
       payrollAggregate,
     ] = await Promise.all([
-      prisma.employee.count(),
-      prisma.employee.count({ where: { status: EmployeeStatus.ACTIVE } }),
-      prisma.department.count(),
+      prisma.employee.count({ where: empWhere }),
+      prisma.employee.count({ where: { ...empWhere, status: EmployeeStatus.ACTIVE } }),
+      prisma.department.count({ where: deptWhere }),
       prisma.attendance.count({
-        where: { date: today, status: AttendanceStatus.PRESENT },
+        where: { ...empRelWhere, date: today, status: AttendanceStatus.PRESENT },
       }),
       prisma.attendance.count({
-        where: { date: today, status: AttendanceStatus.ON_LEAVE },
+        where: { ...empRelWhere, date: today, status: AttendanceStatus.ON_LEAVE },
       }),
       prisma.leaveRequest.count({
         where: {
+          ...empRelWhere,
           status: LeaveStatus.APPROVED,
           startDate: { lte: now },
           endDate: { gte: now },
         },
       }),
-      prisma.leaveRequest.count({ where: { status: LeaveStatus.PENDING } }),
+      prisma.leaveRequest.count({ where: { ...empRelWhere, status: LeaveStatus.PENDING } }),
       prisma.payroll.aggregate({
         _sum: { netSalary: true },
-        where: { month, year },
+        where: { ...empRelWhere, month, year },
       }),
     ]);
 
@@ -59,9 +86,12 @@ class DashboardRepository {
     };
   }
 
-  async getAnalyticsStats() {
+  async getAnalyticsStats(user: TokenPayload) {
+    const { empWhere, empRelWhere, deptWhere } = this.getScopes(user);
+
     // 1. Department Distribution
     const departments = await prisma.department.findMany({
+      where: deptWhere,
       include: {
         _count: {
           select: { employees: true },
@@ -76,6 +106,7 @@ class DashboardRepository {
     // 2. Leave Status Distribution
     const leaveStatusGroup = await prisma.leaveRequest.groupBy({
       by: ["status"],
+      where: empRelWhere,
       _count: {
         id: true,
       },
@@ -98,6 +129,7 @@ class DashboardRepository {
 
     // 3. Employee Growth (by month or joining curve)
     const employees = await prisma.employee.findMany({
+      where: empWhere,
       select: {
         joiningDate: true,
         createdAt: true,
@@ -146,6 +178,7 @@ class DashboardRepository {
 
     const attendanceRecords = await prisma.attendance.findMany({
       where: {
+        ...empRelWhere,
         date: {
           gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
         },
@@ -177,6 +210,7 @@ class DashboardRepository {
 
     // 5. Payroll Distribution (By Department)
     const allEmployeesWithDept = await prisma.employee.findMany({
+      where: empWhere,
       include: {
         department: true,
       },
@@ -225,4 +259,3 @@ class DashboardRepository {
 }
 
 export default new DashboardRepository();
-

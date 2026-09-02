@@ -1,6 +1,7 @@
 import { Prisma, Department } from "@prisma/client";
 import departmentRepository from "../repositories/department.repository";
 import organizationRepository from "../repositories/organization.repository";
+import employeeRepository from "../repositories/employee.repository";
 
 class DepartmentService {
   async createDepartment(
@@ -92,6 +93,11 @@ class DepartmentService {
 
     if (!existingDepartment) {
       throw new Error("Department not found.");
+    }
+
+    const employeeCount = await employeeRepository.countByDepartment(id);
+    if (employeeCount > 0) {
+      throw new Error(`Cannot delete department because it has ${employeeCount} active employee(s) assigned.`);
     }
 
     return departmentRepository.delete(id);

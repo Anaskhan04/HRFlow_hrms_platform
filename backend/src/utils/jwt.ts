@@ -14,6 +14,8 @@ export interface TokenPayload {
   email: string;
   role: Role;
   employeeId?: string;
+  organizationId?: string;
+  departmentId?: string | null;
 }
 
 export const generateToken = (

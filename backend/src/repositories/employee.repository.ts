@@ -138,6 +138,12 @@ class EmployeeRepository {
       where: { id },
     });
   }
+
+  async countByDepartment(departmentId: string): Promise<number> {
+    return prisma.employee.count({
+      where: { departmentId },
+    });
+  }
 }
 
 export default new EmployeeRepository();

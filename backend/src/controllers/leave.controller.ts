@@ -120,10 +120,9 @@ class LeaveController {
   );
 
   approve = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const approverId = req.user?.userId || req.user?.employeeId;
     const leaveRequest = await leaveService.approveLeaveRequest(
       req.params.id as string,
-      approverId
+      req.user
     );
 
     res.status(200).json({
@@ -134,10 +133,9 @@ class LeaveController {
   });
 
   reject = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const approverId = req.user?.userId || req.user?.employeeId;
     const leaveRequest = await leaveService.rejectLeaveRequest(
       req.params.id as string,
-      approverId
+      req.user
     );
 
     res.status(200).json({
@@ -216,13 +214,26 @@ class LeaveController {
         return;
       }
 
-      const isPrivileged = canOverrideEmployeeId(req.user?.role) || req.user?.role === Role.MANAGER;
-      if (!isPrivileged && leaveRequest.employeeId !== req.user?.employeeId) {
-        res.status(403).json({
-          success: false,
-          message: "Forbidden. You can only view your own leave requests.",
-        });
-        return;
+      const isAdminOrHR = req.user?.role === Role.ADMIN || req.user?.role === Role.HR;
+      const isManager = req.user?.role === Role.MANAGER;
+      
+      if (!isAdminOrHR) {
+        if (isManager) {
+          const emp = (leaveRequest as any).employee;
+          if (leaveRequest.employeeId !== req.user?.employeeId && emp?.departmentId !== req.user?.departmentId) {
+            res.status(403).json({
+              success: false,
+              message: "Forbidden. You can only view leave requests for your own department.",
+            });
+            return;
+          }
+        } else if (leaveRequest.employeeId !== req.user?.employeeId) {
+          res.status(403).json({
+            success: false,
+            message: "Forbidden. You can only view your own leave requests.",
+          });
+          return;
+        }
       }
 
       res.status(200).json({

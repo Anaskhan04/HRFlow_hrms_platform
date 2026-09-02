@@ -1,5 +1,6 @@
-import { Prisma, LeaveRequest, LeaveStatus } from "@prisma/client";
+import { Prisma, LeaveRequest, LeaveStatus, Role } from "@prisma/client";
 import prisma from "../lib/prisma";
+import { TokenPayload } from "../utils/jwt";
 import leaveRepository from "../repositories/leave.repository";
 import notificationService from "./notification.service";
 
@@ -62,6 +63,17 @@ class LeaveService {
       if (balanceRecord.balance < requestedDays) {
         throw new Error(`Insufficient leave balance. You requested ${requestedDays} days, but only have ${balanceRecord.balance} days available.`);
       }
+
+      // Check for overlapping leaves
+      const overlapping = await leaveRepository.findOverlappingLeaveRequests(
+        data.employeeId as string,
+        new Date(data.startDate as string | Date),
+        new Date(data.endDate as string | Date)
+      );
+      
+      if (overlapping) {
+        throw new Error("You already have a pending or approved leave request that overlaps with this date range.");
+      }
     }
 
     // Always force status to PENDING on generic create — workflow transitions
@@ -114,11 +126,17 @@ class LeaveService {
     return leaveRepository.findLeaveBalancesByEmployee(employeeId);
   }
 
-  async approveLeaveRequest(id: string, approverId?: string): Promise<LeaveRequest> {
+  async approveLeaveRequest(id: string, approver: TokenPayload | any): Promise<LeaveRequest> {
     const leaveRequest = await leaveRepository.findById(id);
 
     if (!leaveRequest) {
       throw new Error("Leave request not found.");
+    }
+
+    if (approver && approver.role === Role.MANAGER) {
+      if ((leaveRequest as any).employee?.departmentId !== approver.departmentId) {
+        throw new Error("Forbidden. You can only approve leave requests for your own department.");
+      }
     }
 
     if (leaveRequest.status === LeaveStatus.REJECTED) {
@@ -170,7 +188,7 @@ class LeaveService {
         where: { id, status: LeaveStatus.PENDING },
         data: {
           status: LeaveStatus.APPROVED,
-          approvedBy: approverId || null,
+          approvedBy: approver?.userId || approver?.employeeId || null,
         },
       });
 
@@ -195,11 +213,17 @@ class LeaveService {
     return updatedLeave;
   }
 
-  async rejectLeaveRequest(id: string, approverId?: string): Promise<LeaveRequest> {
+  async rejectLeaveRequest(id: string, approver: TokenPayload | any): Promise<LeaveRequest> {
     const leaveRequest = await leaveRepository.findById(id);
 
     if (!leaveRequest) {
       throw new Error("Leave request not found.");
+    }
+
+    if (approver && approver.role === Role.MANAGER) {
+      if ((leaveRequest as any).employee?.departmentId !== approver.departmentId) {
+        throw new Error("Forbidden. You can only reject leave requests for your own department.");
+      }
     }
 
     if (leaveRequest.status !== LeaveStatus.PENDING) {
@@ -209,7 +233,7 @@ class LeaveService {
     // ✅ Rejection does NOT touch LeaveBalance (balance was never deducted for PENDING requests)
     const updated = await leaveRepository.update(id, {
       status: LeaveStatus.REJECTED,
-      approvedBy: approverId || null,
+      approvedBy: approver?.userId || approver?.employeeId || null,
     });
     notificationService.onLeaveRejected(id).catch(() => {});
     return updated;

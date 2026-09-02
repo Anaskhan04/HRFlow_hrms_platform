@@ -4,7 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 
 class DashboardController {
   getSummary = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const summary = await dashboardService.getSummary();
+    const summary = await dashboardService.getSummary(req.user as any);
 
     res.status(200).json({
       success: true,
@@ -14,7 +14,7 @@ class DashboardController {
   });
 
   getAnalytics = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const analytics = await dashboardService.getAnalytics();
+    const analytics = await dashboardService.getAnalytics(req.user as any);
 
     res.status(200).json({
       success: true,

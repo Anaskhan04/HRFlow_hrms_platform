@@ -89,6 +89,21 @@ class LeaveRepository {
     });
   }
 
+  async findOverlappingLeaveRequests(employeeId: string, startDate: Date, endDate: Date): Promise<LeaveRequest | null> {
+    return prisma.leaveRequest.findFirst({
+      where: {
+        employeeId,
+        status: { in: ["PENDING", "APPROVED"] },
+        OR: [
+          {
+            startDate: { lte: endDate },
+            endDate: { gte: startDate },
+          },
+        ],
+      },
+    });
+  }
+
   async findLeaveBalancesByEmployee(employeeId: string) {
     return prisma.leaveBalance.findMany({
       where: { employeeId },

@@ -93,6 +93,8 @@ class AuthService {
       email: user.email,
       role: user.role,
       employeeId: user.employeeId,
+      organizationId: employee.organizationId,
+      departmentId: employee.departmentId,
     });
 
     // 7. Never return password
@@ -129,6 +131,8 @@ class AuthService {
       email: user.email,
       role: user.role,
       employeeId: user.employeeId,
+      organizationId: employee?.organizationId,
+      departmentId: employee?.departmentId,
     });
 
     // 5. Never return password

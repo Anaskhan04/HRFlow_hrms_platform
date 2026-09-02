@@ -31,9 +31,8 @@ class PayrollService {
     const basicSalary = data.basicSalary ?? parseFloat(((employee.salary || 0) / 12).toFixed(2));
     const allowances = data.allowances ?? 0;
     const deductions = data.deductions ?? 0;
-    const netSalary = parseFloat(
-      (basicSalary + allowances - deductions).toFixed(2)
-    );
+    const rawNet = basicSalary + allowances - deductions;
+    const netSalary = parseFloat(Math.max(0, rawNet).toFixed(2));
 
     const created = await payrollRepository.create({
       employeeId: data.employeeId,
@@ -129,7 +128,8 @@ class PayrollService {
     const basicSalary = data.basicSalary ?? payroll.basicSalary;
     const allowances = data.allowances ?? payroll.allowances;
     const deductions = data.deductions ?? payroll.deductions;
-    const netSalary = parseFloat((basicSalary + allowances - deductions).toFixed(2));
+    const rawNet = basicSalary + allowances - deductions;
+    const netSalary = parseFloat(Math.max(0, rawNet).toFixed(2));
 
     const updateData: any = {
       basicSalary,
