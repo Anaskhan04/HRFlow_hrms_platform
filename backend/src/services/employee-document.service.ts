@@ -5,7 +5,7 @@ import employeeDocumentRepository from "../repositories/employee-document.reposi
 import employeeRepository from "../repositories/employee.repository";
 import { UploadDocumentMetaInput, UpdateDocumentMetaInput } from "../validators/employee-document.validator";
 
-export const UPLOAD_ROOT = path.resolve(__dirname, "../../..", "uploads", "employee-documents");
+export const UPLOAD_ROOT = path.resolve(process.cwd(), "uploads", "employee-documents");
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 export const ALLOWED_MIME_TYPES = new Set<string>([
   "application/pdf",
