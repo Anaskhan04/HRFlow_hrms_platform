@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Role } from "@prisma/client";
+import { Role, LeaveRequest } from "@prisma/client";
 import leaveService from "../services/leave.service";
 import exportService from "../services/export.service";
 import {
@@ -61,10 +61,12 @@ class LeaveController {
   });
 
   apply = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    let employeeId: string | undefined = req.user?.employeeId;
+    let employeeId: string | undefined;
 
-    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
-      employeeId = req.body.employeeId;
+    if (canOverrideEmployeeId(req.user?.role)) {
+      employeeId = req.body.employeeId || req.user?.employeeId;
+    } else {
+      employeeId = req.user?.employeeId;
     }
 
     if (!employeeId) {
@@ -96,10 +98,12 @@ class LeaveController {
 
   getMyLeaves = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
-      let employeeId: string | undefined = req.user?.employeeId;
+      let employeeId: string | undefined;
 
-      if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
-        employeeId = (req.query.employeeId as string) || req.body.employeeId;
+      if (canOverrideEmployeeId(req.user?.role)) {
+        employeeId = (req.query.employeeId as string) || req.body.employeeId || req.user?.employeeId;
+      } else {
+        employeeId = req.user?.employeeId;
       }
 
       if (!employeeId) {
@@ -146,10 +150,12 @@ class LeaveController {
   });
 
   cancel = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    let employeeId: string | undefined = req.user?.employeeId;
+    let employeeId: string | undefined;
 
-    if (!employeeId && canOverrideEmployeeId(req.user?.role)) {
-      employeeId = req.body.employeeId;
+    if (canOverrideEmployeeId(req.user?.role)) {
+      employeeId = req.body.employeeId || req.user?.employeeId;
+    } else {
+      employeeId = req.user?.employeeId;
     }
 
     if (!employeeId) {
@@ -173,7 +179,35 @@ class LeaveController {
   });
 
   getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const leaveRequests = await leaveService.getLeaveRequests();
+    const isAdminOrHR = req.user?.role === Role.ADMIN || req.user?.role === Role.HR;
+    const isManager = req.user?.role === Role.MANAGER;
+
+    let leaveRequests: LeaveRequest[];
+
+    if (isAdminOrHR) {
+      const queryEmployeeId = req.query.employeeId as string | undefined;
+      if (queryEmployeeId) {
+        leaveRequests = await leaveService.getMyLeaveRequests(queryEmployeeId);
+      } else {
+        leaveRequests = await leaveService.getLeaveRequests();
+      }
+    } else if (isManager) {
+      const allLeaves = await leaveService.getLeaveRequests();
+      const deptId = req.user?.departmentId;
+      leaveRequests = allLeaves.filter(
+        (lr: any) =>
+          (deptId && lr.employee?.departmentId === deptId) ||
+          lr.employeeId === req.user?.employeeId
+      );
+    } else {
+      // EMPLOYEE: strictly forced to their own employeeId from authenticated JWT
+      const employeeId = req.user?.employeeId;
+      if (!employeeId) {
+        leaveRequests = [];
+      } else {
+        leaveRequests = await leaveService.getMyLeaveRequests(employeeId);
+      }
+    }
 
     res.status(200).json({
       success: true,

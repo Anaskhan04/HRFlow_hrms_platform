@@ -11,10 +11,15 @@ import {
   type LeaveActionType,
 } from "../components/leaves";
 import { Button } from "../components/ui/button";
+import { useAuth } from "../hooks/useAuth";
 import leaveService from "../services/leave.service";
 import type { LeaveRequest, LeaveQueryParams } from "../types";
 
 export const LeaveListPage: React.FC = () => {
+  const { user } = useAuth();
+  const canApproveReject = user?.role === "ADMIN" || user?.role === "HR" || user?.role === "MANAGER";
+  const userEmployeeId = user?.employeeId || user?.employee?.id;
+
   const [queryParams, setQueryParams] = useState<LeaveQueryParams>({
     page: 1,
     limit: 10,
@@ -180,9 +185,13 @@ export const LeaveListPage: React.FC = () => {
         isOpen={!!viewingLeave}
         onClose={() => setViewingLeave(null)}
         leave={viewingLeave}
-        onApprove={(leave) => openActionDialog(leave, "APPROVE")}
-        onReject={(leave) => openActionDialog(leave, "REJECT")}
-        onCancel={(leave) => openActionDialog(leave, "CANCEL")}
+        onApprove={canApproveReject ? (leave) => openActionDialog(leave, "APPROVE") : undefined}
+        onReject={canApproveReject ? (leave) => openActionDialog(leave, "REJECT") : undefined}
+        onCancel={
+          (canApproveReject || viewingLeave?.employeeId === userEmployeeId)
+            ? (leave) => openActionDialog(leave, "CANCEL")
+            : undefined
+        }
       />
 
       <LeaveActionDialog

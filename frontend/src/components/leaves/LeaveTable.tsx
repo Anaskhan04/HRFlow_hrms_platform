@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { LeaveRequest } from "../../types";
 import { Button } from "../ui/button";
+import { useAuth } from "../../hooks/useAuth";
 
 interface LeaveTableProps {
   leaves: LeaveRequest[];
@@ -36,6 +37,9 @@ export const LeaveTable: React.FC<LeaveTableProps> = ({
   onReject,
   onCancel,
 }) => {
+  const { user } = useAuth();
+  const canApproveReject = user?.role === "ADMIN" || user?.role === "HR" || user?.role === "MANAGER";
+  const userEmployeeId = user?.employeeId || user?.employee?.id;
   if (isLoading) {
     return (
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
@@ -181,35 +185,41 @@ export const LeaveTable: React.FC<LeaveTableProps> = ({
 
                       {leave.status === "PENDING" && (
                         <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onApprove(leave)}
-                            title="Approve Leave"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10"
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                          </Button>
+                          {canApproveReject && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onApprove(leave)}
+                                title="Approve Leave"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </Button>
 
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onReject(leave)}
-                            title="Reject Leave"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onReject(leave)}
+                                title="Reject Leave"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
 
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onCancel(leave)}
-                            title="Cancel Request"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10"
-                          >
-                            <Ban className="h-4 w-4" />
-                          </Button>
+                          {(canApproveReject || leave.employeeId === userEmployeeId) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onCancel(leave)}
+                              title="Cancel Request"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10"
+                            >
+                              <Ban className="h-4 w-4" />
+                            </Button>
+                          )}
                         </>
                       )}
                     </div>

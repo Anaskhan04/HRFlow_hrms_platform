@@ -6,13 +6,14 @@ import { Modal } from "../ui/modal";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
+import { useAuth } from "../../hooks/useAuth";
 import { useEmployees } from "../../hooks/useEmployees";
 import { useLeaveTypes, useApplyLeave, useLeaveBalances } from "../../hooks/useLeaves";
 import { Calendar, User, FileText, AlertCircle, Wallet } from "lucide-react";
 
 const applyLeaveSchema = z
   .object({
-    employeeId: z.string().min(1, "Please select an employee"),
+    employeeId: z.string().optional(),
     leaveTypeId: z.string().min(1, "Please select a leave type"),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
@@ -53,6 +54,10 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { user } = useAuth();
+  const isEmployee = user?.role === "EMPLOYEE";
+  const userEmployeeId = user?.employeeId || user?.employee?.id || "";
+
   const { data: employeesData } = useEmployees({ limit: 100 });
   const { data: leaveTypes = [] } = useLeaveTypes();
   const applyMutation = useApplyLeave();
@@ -68,7 +73,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   } = useForm<ApplyLeaveFormValues>({
     resolver: zodResolver(applyLeaveSchema),
     defaultValues: {
-      employeeId: "",
+      employeeId: isEmployee ? userEmployeeId : "",
       leaveTypeId: "",
       startDate: new Date().toISOString().split("T")[0],
       endDate: new Date().toISOString().split("T")[0],
@@ -77,7 +82,8 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   });
 
   // Watch relevant fields for live balance calculation
-  const watchedEmployeeId = useWatch({ control, name: "employeeId" });
+  const formEmployeeId = useWatch({ control, name: "employeeId" });
+  const watchedEmployeeId = isEmployee ? userEmployeeId : (formEmployeeId || employees[0]?.id || "");
   const watchedLeaveTypeId = useWatch({ control, name: "leaveTypeId" });
   const watchedStartDate = useWatch({ control, name: "startDate" });
   const watchedEndDate = useWatch({ control, name: "endDate" });
@@ -109,19 +115,19 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       reset({
-        employeeId: employees[0]?.id || "",
+        employeeId: isEmployee ? userEmployeeId : (employees[0]?.id || userEmployeeId),
         leaveTypeId: leaveTypes[0]?.id || "",
         startDate: new Date().toISOString().split("T")[0],
         endDate: new Date().toISOString().split("T")[0],
         reason: "",
       });
     }
-  }, [isOpen, reset, employees, leaveTypes]);
+  }, [isOpen, reset, employees, leaveTypes, isEmployee, userEmployeeId]);
 
   const onSubmit = (data: ApplyLeaveFormValues) => {
     applyMutation.mutate(
       {
-        employeeId: data.employeeId,
+        employeeId: isEmployee ? userEmployeeId : (data.employeeId || userEmployeeId),
         leaveTypeId: data.leaveTypeId,
         startDate: data.startDate,
         endDate: data.endDate,
@@ -154,28 +160,32 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
           </div>
         )}
 
-        {/* Employee Selector */}
-        <div className="space-y-1.5">
-          <Label htmlFor="employeeId" className="flex items-center gap-1.5 text-xs font-semibold">
-            <User className="h-3.5 w-3.5 text-indigo-500" />
-            Employee <span className="text-rose-500">*</span>
-          </Label>
-          <select
-            id="employeeId"
-            {...register("employeeId")}
-            className="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            <option value="">Select an employee...</option>
-            {employees.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.firstName} {emp.lastName} ({emp.employeeCode}) – {emp.designation}
-              </option>
-            ))}
-          </select>
-          {errors.employeeId && (
-            <p className="text-xs text-rose-500">{errors.employeeId.message}</p>
-          )}
-        </div>
+        {/* Employee Selector (Only for Admin, HR, Manager) */}
+        {!isEmployee ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="employeeId" className="flex items-center gap-1.5 text-xs font-semibold">
+              <User className="h-3.5 w-3.5 text-indigo-500" />
+              Employee <span className="text-rose-500">*</span>
+            </Label>
+            <select
+              id="employeeId"
+              {...register("employeeId")}
+              className="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="">Select an employee...</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.firstName} {emp.lastName} ({emp.employeeCode}) – {emp.designation}
+                </option>
+              ))}
+            </select>
+            {errors.employeeId && (
+              <p className="text-xs text-rose-500">{errors.employeeId.message}</p>
+            )}
+          </div>
+        ) : (
+          <input type="hidden" {...register("employeeId")} value={userEmployeeId} />
+        )}
 
         {/* Leave Type Selector + Balance badge */}
         <div className="space-y-1.5">

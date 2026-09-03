@@ -12,7 +12,7 @@ router.post("/", authorizeRole(Role.ADMIN, Role.HR), leaveController.create);
 
 router.get("/export", authorizeRole(Role.ADMIN, Role.HR), leaveController.export);
 
-router.get("/", authorizeRole(Role.ADMIN, Role.HR, Role.MANAGER), leaveController.getAll);
+router.get("/", leaveController.getAll);
 
 router.post("/apply", leaveController.apply);
 
