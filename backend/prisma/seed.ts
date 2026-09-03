@@ -308,7 +308,7 @@ await prisma.leaveType.deleteMany();
       code: "EMP-1020",
       firstName: "Megan",
       lastName: "Lewis",
-      email: "m.lewis@hrflow.com",
+      email: "megan.login@hrflow.com",
       phone: "+1 (555) 010-1020",
       designation: "Digital Marketing & Growth Specialist",
       dept: "Marketing",
@@ -370,6 +370,19 @@ await prisma.leaveType.deleteMany();
     },
   });
   console.log(`   -> HR User created: ${hrUser.email} (Role: ${hrUser.role})`);
+
+  const employeeUserObj = createdEmployees.find((e) => e.email === "megan.login@hrflow.com")!;
+  const hashedEmployeePassword = await hashPassword("Employee@123");
+  const employeeUser = await prisma.user.create({
+    data: {
+      email: "megan.login@hrflow.com",
+      password: hashedEmployeePassword,
+      role: Role.EMPLOYEE,
+      employeeId: employeeUserObj.id,
+      isActive: true,
+    },
+  });
+  console.log(`   -> Employee User created: ${employeeUser.email} (Role: ${employeeUser.role})`);
 
   // 7. Create Attendance Records for all employees over the last 5 days
   console.log("\n📅 Generating realistic attendance logs for the past 5 workdays...");
@@ -556,8 +569,9 @@ await prisma.leaveType.deleteMany();
   console.log("\n✨ Database seed completed successfully! All enterprise modules populated.");
   console.log("-----------------------------------------------------------------------");
   console.log("🔑 LOGIN CREDENTIALS AVAILABLE:");
-  console.log("   👑 ADMIN -> Email: admin@hrflow.com | Password: Admin@123");
-  console.log("   👔 HR    -> Email: hr@hrflow.com    | Password: Hr@123");
+  console.log("   👑 ADMIN    -> Email: admin@hrflow.com       | Password: Admin@123");
+  console.log("   👔 HR       -> Email: hr@hrflow.com          | Password: Hr@123");
+  console.log("   👤 EMPLOYEE -> Email: megan.login@hrflow.com | Password: Employee@123");
   console.log("-----------------------------------------------------------------------\n");
 }
 
