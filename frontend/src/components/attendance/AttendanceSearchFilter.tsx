@@ -7,6 +7,7 @@ import {
   LogIn,
   LogOut,
   Download,
+  Loader2,
 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -19,6 +20,7 @@ interface AttendanceSearchFilterProps {
   onOpenCheckInModal: () => void;
   onOpenCheckOutModal: () => void;
   onExport: () => void;
+  isExporting?: boolean;
 }
 
 export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
@@ -28,6 +30,7 @@ export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
   onOpenCheckInModal,
   onOpenCheckOutModal,
   onExport,
+  isExporting = false,
 }) => {
   const [searchInput, setSearchInput] = useState(queryParams.search || "");
 
@@ -76,11 +79,21 @@ export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <Button
             onClick={onExport}
+            disabled={isExporting}
             variant="outline"
             className="gap-2 shadow-sm font-semibold"
           >
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
+            {isExporting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span className="hidden sm:inline">Exporting...</span>
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Export</span>
+              </>
+            )}
           </Button>
 
           <Button

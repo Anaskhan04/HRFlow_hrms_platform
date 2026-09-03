@@ -28,6 +28,8 @@ export const AttendanceListPage: React.FC = () => {
     isOpen: false,
     record: null,
   });
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const {
     data,
@@ -72,10 +74,19 @@ export const AttendanceListPage: React.FC = () => {
   };
 
   const handleExport = async () => {
+    setIsExporting(true);
+    setExportError(null);
     try {
       await attendanceService.exportAttendance(queryParams);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to export attendance", err);
+      if (err?.response?.status === 403) {
+        setExportError("You do not have permission to export attendance data.");
+      } else {
+        setExportError("Failed to export attendance data. Please try again.");
+      }
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -114,6 +125,23 @@ export const AttendanceListPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Export Error Alert */}
+      {exportError && (
+        <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold">{exportError}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setExportError(null)}
+            className="text-xs font-medium hover:underline opacity-80 hover:opacity-100"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Error Alert */}
       {isError && (
         <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
@@ -145,6 +173,7 @@ export const AttendanceListPage: React.FC = () => {
           setCheckOutModalState({ isOpen: true, record: null })
         }
         onExport={handleExport}
+        isExporting={isExporting}
       />
 
       {/* Attendance Table */}
