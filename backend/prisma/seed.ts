@@ -15,10 +15,11 @@ async function main() {
 
   // 1. Idempotency: Clean up existing database records in reverse order of dependencies
   console.log("🧹 Cleaning up existing database records...");
-  await prisma.payroll.deleteMany();
-  await prisma.attendance.deleteMany();
-  await prisma.leaveRequest.deleteMany();
-  await prisma.leaveType.deleteMany();
+ await prisma.payroll.deleteMany();
+await prisma.attendance.deleteMany();
+await prisma.leaveRequest.deleteMany();
+await prisma.leaveBalance.deleteMany();
+await prisma.leaveType.deleteMany();
   await prisma.user.deleteMany();
   await prisma.employee.deleteMany();
   await prisma.department.deleteMany();
