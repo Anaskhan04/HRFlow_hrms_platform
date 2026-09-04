@@ -108,7 +108,7 @@ class DashboardRepository {
       by: ["status"],
       where: empRelWhere,
       _count: {
-        id: true,
+        _all: true,
       },
     });
     const leaveStatusMap: Record<string, number> = {
@@ -118,7 +118,7 @@ class DashboardRepository {
       CANCELLED: 0,
     };
     leaveStatusGroup.forEach((item) => {
-      leaveStatusMap[item.status] = item._count.id;
+      leaveStatusMap[item.status] = item._count._all;
     });
     const leaveStatusDistribution = [
       { status: "Approved", count: leaveStatusMap.APPROVED, fill: "#10b981" },
