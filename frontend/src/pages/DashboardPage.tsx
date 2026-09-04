@@ -27,6 +27,8 @@ import { cn } from "../utils/cn";
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const isEmployee = user?.role === "EMPLOYEE";
+  const isHR = user?.role === "HR";
+  const isAdmin = user?.role === "ADMIN";
 
   const { data: summary, isLoading, isError, error, refetch, isFetching } = useDashboardSummary({
     enabled: !isEmployee,
@@ -289,16 +291,46 @@ export const DashboardPage: React.FC = () => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
         <div className="relative z-10 space-y-1">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-md border border-white/10 text-blue-200 mb-2">
-            <Sparkles className="h-3.5 w-3.5 text-amber-400 fill-amber-400 animate-pulse" />
-            <span>Sprint 14 Analytics Live</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Welcome back, {user?.email?.split("@")[0] || "Executive"}
-          </h1>
-          <p className="text-sm text-slate-300 max-w-xl">
-            Here is your real-time overview of workforce headcount, attendance metrics, pending leaves, and payroll budgets.
-          </p>
+          {isHR ? (
+            <>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-md border border-white/10 text-blue-200 mb-2">
+                <Users className="h-3.5 w-3.5 text-amber-400" />
+                <span>HR Operations Center</span>
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                HR Operations Hub
+              </h1>
+              <p className="text-sm text-slate-300 max-w-xl">
+                Real-time workforce metrics, attendance, leave and employee operations.
+              </p>
+            </>
+          ) : isAdmin ? (
+            <>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-md border border-white/10 text-blue-200 mb-2">
+                <ShieldCheck className="h-3.5 w-3.5 text-amber-400" />
+                <span>System Administration</span>
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                Admin Dashboard
+              </h1>
+              <p className="text-sm text-slate-300 max-w-xl">
+                Real-time overview of organization metrics and settings.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-md border border-white/10 text-blue-200 mb-2">
+                <Building2 className="h-3.5 w-3.5 text-amber-400" />
+                <span>Department Management</span>
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                Department Dashboard
+              </h1>
+              <p className="text-sm text-slate-300 max-w-xl">
+                Overview of department workforce and metrics.
+              </p>
+            </>
+          )}
         </div>
 
         <div className="relative z-10 flex items-center gap-3 self-start md:self-center">
@@ -385,56 +417,63 @@ export const DashboardPage: React.FC = () => {
       {/* Dashboard Interactive Analytics Section (Recharts) */}
       <DashboardAnalyticsSection />
 
-      {/* Quick Action & System Health Panel */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="bg-card/80 backdrop-blur-sm border shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-              <span>Enterprise Architecture Health</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex items-center justify-between border-b pb-2">
-              <span>JWT Authentication Interceptor</span>
-              <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Active
-              </span>
-            </div>
-            <div className="flex items-center justify-between border-b pb-2">
-              <span>TanStack Query Caching & Stale Time</span>
-              <span className="font-semibold text-foreground">2 Minutes</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Analytics API Connection</span>
-              <span className="font-semibold text-foreground">/api/v1/dashboard/analytics</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/80 backdrop-blur-sm border shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              <span>Completed Core Modules</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex items-center justify-between border-b pb-2">
-              <span>Employees & Departments Directory</span>
-              <span className="text-xs font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Completed</span>
-            </div>
-            <div className="flex items-center justify-between border-b pb-2">
-              <span>Leave, Attendance & Payroll Management</span>
-              <span className="text-xs font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Completed</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Profile, Settings & Recharts Analytics</span>
-              <span className="text-xs font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Completed</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* HR Operations Quick Action Panel */}
+      {isHR && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <Link to="/employees" className="block group">
+            <Card className="bg-card/80 backdrop-blur-sm border shadow-sm hover:shadow-md hover:border-primary/40 transition-all h-full">
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 transition-transform group-hover:scale-110">
+                  <UserCheck className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">Add Employee</h4>
+                  <p className="text-xs text-muted-foreground mt-1">Manage directory</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/leaves" className="block group">
+            <Card className="bg-card/80 backdrop-blur-sm border shadow-sm hover:shadow-md hover:border-primary/40 transition-all h-full">
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-600 dark:text-orange-400 transition-transform group-hover:scale-110">
+                  <CalendarDays className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">Review Leaves</h4>
+                  <p className="text-xs text-muted-foreground mt-1">Pending approvals</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/attendance" className="block group">
+            <Card className="bg-card/80 backdrop-blur-sm border shadow-sm hover:shadow-md hover:border-primary/40 transition-all h-full">
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 transition-transform group-hover:scale-110">
+                  <Clock className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">Attendance</h4>
+                  <p className="text-xs text-muted-foreground mt-1">Monitor daily logs</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/payroll" className="block group">
+            <Card className="bg-card/80 backdrop-blur-sm border shadow-sm hover:shadow-md hover:border-primary/40 transition-all h-full">
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 transition-transform group-hover:scale-110">
+                  <Wallet className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">Payroll Operations</h4>
+                  <p className="text-xs text-muted-foreground mt-1">Manage processing</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      )}
     </div>
   );
 };
