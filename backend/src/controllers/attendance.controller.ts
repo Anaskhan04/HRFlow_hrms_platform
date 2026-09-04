@@ -12,29 +12,41 @@ const isPrivilegedRole = (role: Role | undefined): boolean => {
   return role === Role.ADMIN || role === Role.HR;
 };
 
-/**
- * Resolves the target employeeId for attendance endpoints with strict RBAC:
- *
- * - ADMIN / HR: body/query parameters take PRECEDENCE over JWT employeeId.
- *   This lets HR/Admin backfill attendance for another employee even when HR
- *   users themselves have a linked employee record in their JWT. If no override
- *   is provided, fall back to the authenticated user's employeeId.
- *
- * - EMPLOYEE / MANAGER: body/query employeeId is ALWAYS IGNORED. Only the
- *   JWT's employeeId (authenticated identity) is used — preventing buddy
- *   punching and unauthorized attendance snooping.
- *
- * @throws 400 if no employeeId can be resolved for either role class.
- */
-const resolveEmployeeId = (
-  req: Request,
-  overrideFromBodyOrQuery?: string
-): { employeeId?: string } => {
-  const privileged = isPrivilegedRole(req.user?.role);
+const canManageAttendanceForOthers = (role: Role | undefined): boolean => {
+  return role === Role.ADMIN;
+};
 
-  if (privileged) {
-    if (overrideFromBodyOrQuery && overrideFromBodyOrQuery.trim() !== "") {
-      return { employeeId: overrideFromBodyOrQuery };
+/**
+ * Resolves the target employeeId for attendance punch actions (checkIn, checkOut):
+ * - ADMIN: may supply an employeeId in the body to clock in/out on behalf of another employee.
+ * - HR / MANAGER / EMPLOYEE: always scoped to the authenticated user's own employeeId.
+ */
+const resolvePunchEmployeeId = (
+  req: Request,
+  overrideFromBody?: string
+): { employeeId?: string } => {
+  if (canManageAttendanceForOthers(req.user?.role)) {
+    if (overrideFromBody && overrideFromBody.trim() !== "") {
+      return { employeeId: overrideFromBody };
+    }
+    return { employeeId: req.user?.employeeId };
+  }
+
+  return { employeeId: req.user?.employeeId };
+};
+
+/**
+ * Resolves the target employeeId for single-employee attendance read queries (getToday, getHistory):
+ * - ADMIN / HR: query parameters take precedence to inspect another employee's record.
+ * - MANAGER / EMPLOYEE: always scoped to the authenticated user's own employeeId.
+ */
+const resolveReadEmployeeId = (
+  req: Request,
+  overrideFromQuery?: string
+): { employeeId?: string } => {
+  if (isPrivilegedRole(req.user?.role)) {
+    if (overrideFromQuery && overrideFromQuery.trim() !== "") {
+      return { employeeId: overrideFromQuery };
     }
     return { employeeId: req.user?.employeeId };
   }
@@ -45,7 +57,7 @@ const resolveEmployeeId = (
 class AttendanceController {
   checkIn = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const data = checkInSchema.parse(req.body);
-    const { employeeId } = resolveEmployeeId(req, data.employeeId);
+    const { employeeId } = resolvePunchEmployeeId(req, data.employeeId);
 
     if (!employeeId) {
       res.status(400).json({
@@ -69,7 +81,7 @@ class AttendanceController {
 
   checkOut = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const data = checkOutSchema.parse(req.body);
-    const { employeeId } = resolveEmployeeId(req, data.employeeId);
+    const { employeeId } = resolvePunchEmployeeId(req, data.employeeId);
 
     if (!employeeId) {
       res.status(400).json({
@@ -92,7 +104,7 @@ class AttendanceController {
   });
 
   getToday = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const { employeeId } = resolveEmployeeId(
+    const { employeeId } = resolveReadEmployeeId(
       req,
       req.query.employeeId as string
     );
@@ -114,7 +126,7 @@ class AttendanceController {
   });
 
   getHistory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const { employeeId } = resolveEmployeeId(
+    const { employeeId } = resolveReadEmployeeId(
       req,
       req.query.employeeId as string
     );

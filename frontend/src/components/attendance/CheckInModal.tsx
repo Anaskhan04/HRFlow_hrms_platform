@@ -16,10 +16,10 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   onClose,
 }) => {
   const { user } = useAuth();
-  const isEmployee = user?.role === "EMPLOYEE";
+  const isAdmin = user?.role === "ADMIN";
   const userEmployeeId = user?.employeeId || user?.employee?.id || "";
 
-  const { data: employeesData } = useEmployees({ limit: 100 }, { enabled: !isEmployee });
+  const { data: employeesData } = useEmployees({ limit: 100 }, { enabled: isAdmin });
   const employees = employeesData?.employees || [];
   const checkInMutation = useCheckIn();
 
@@ -29,18 +29,18 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
 
   React.useEffect(() => {
     if (isOpen) {
-      setSelectedEmployeeId(isEmployee ? userEmployeeId : "");
+      setSelectedEmployeeId(isAdmin ? "" : userEmployeeId);
       setRemarks("");
       setErrorMsg(null);
     }
-  }, [isOpen, isEmployee, userEmployeeId]);
+  }, [isOpen, isAdmin, userEmployeeId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const targetEmployeeId = isEmployee ? userEmployeeId : selectedEmployeeId;
+    const targetEmployeeId = isAdmin ? (selectedEmployeeId || userEmployeeId) : userEmployeeId;
 
     if (!targetEmployeeId) {
-      setErrorMsg("Please select an employee to check in.");
+      setErrorMsg(isAdmin ? "Please select an employee to check in." : "No linked employee record found for your account.");
       return;
     }
 
@@ -50,7 +50,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
         employeeId: targetEmployeeId,
         remarks: remarks.trim() ? remarks.trim() : undefined,
       });
-      setSelectedEmployeeId(isEmployee ? userEmployeeId : "");
+      setSelectedEmployeeId(isAdmin ? "" : userEmployeeId);
       setRemarks("");
       onClose();
     } catch (err) {
@@ -91,8 +91,8 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
           </div>
         </div>
 
-        {/* Select Employee (Preserved for ADMIN/HR/MANAGER, hidden for EMPLOYEE) */}
-        {!isEmployee && (
+        {/* Select Employee (Visible ONLY for ADMIN) */}
+        {isAdmin && (
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">
               Employee <span className="text-red-500">*</span>
