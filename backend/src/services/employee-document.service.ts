@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { EmployeeDocument, DocumentCategory, Role } from "@prisma/client";
 import employeeDocumentRepository from "../repositories/employee-document.repository";
 import employeeRepository from "../repositories/employee.repository";
@@ -46,7 +47,16 @@ class EmployeeDocumentService {
     const ext = path.extname(file.originalname || "").toLowerCase();
     const storedName = `${crypto.randomUUID()}${ext}`;
     const storedPath = path.join(employeeDir, storedName);
-    fs.renameSync(file.path, storedPath);
+    try {
+      fs.renameSync(file.path, storedPath);
+    } catch (err: any) {
+      if (err.code === "EXDEV") {
+        fs.copyFileSync(file.path, storedPath);
+        fs.unlinkSync(file.path);
+      } else {
+        throw err;
+      }
+    }
 
     try {
       return await employeeDocumentRepository.create({
