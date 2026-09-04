@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "../utils/cn";
+import { useAuth } from "../hooks/useAuth";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -32,6 +33,13 @@ const navItems = [
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
+  const { user } = useAuth();
+  const isPrivileged = user?.role === "ADMIN" || user?.role === "HR";
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.href === "/employees") return isPrivileged;
+    return true;
+  });
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -70,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
             Main Menu
           </div>
           <nav className="flex flex-col space-y-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               return (
                 <NavLink

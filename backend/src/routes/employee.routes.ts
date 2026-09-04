@@ -12,9 +12,9 @@ router.post("/", authorizeRole(Role.ADMIN, Role.HR), employeeController.create);
 
 router.get("/export", authorizeRole(Role.ADMIN, Role.HR), employeeController.export);
 
-router.get("/", employeeController.getAll);
+router.get("/", authorizeRole(Role.ADMIN, Role.HR), employeeController.getAll);
 
-router.get("/:id", employeeController.getById);
+router.get("/:id", authorizeRole(Role.ADMIN, Role.HR), employeeController.getById);
 
 router.put("/:id", authorizeRole(Role.ADMIN, Role.HR), employeeController.update);
 

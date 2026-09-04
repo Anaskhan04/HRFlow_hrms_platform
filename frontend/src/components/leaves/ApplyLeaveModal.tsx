@@ -58,7 +58,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   const isEmployee = user?.role === "EMPLOYEE";
   const userEmployeeId = user?.employeeId || user?.employee?.id || "";
 
-  const { data: employeesData } = useEmployees({ limit: 100 });
+  const { data: employeesData } = useEmployees({ limit: 100 }, { enabled: !isEmployee });
   const { data: leaveTypes = [] } = useLeaveTypes();
   const applyMutation = useApplyLeave();
 

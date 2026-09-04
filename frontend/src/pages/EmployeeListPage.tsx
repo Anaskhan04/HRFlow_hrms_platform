@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { Users, Sparkles, RefreshCw } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 import { useEmployees } from "../hooks/useEmployees";
 import EmployeeSearchFilter from "../components/employees/EmployeeSearchFilter";
 import EmployeeTable from "../components/employees/EmployeeTable";
@@ -15,6 +17,9 @@ import { cn } from "../utils/cn";
 import type { Employee, EmployeeQueryParams } from "../types";
 
 export const EmployeeListPage: React.FC = () => {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const isPrivileged = user?.role === "ADMIN" || user?.role === "HR";
+
   const [queryParams, setQueryParams] = useState<EmployeeQueryParams>({
     page: 1,
     limit: 10,
@@ -31,7 +36,17 @@ export const EmployeeListPage: React.FC = () => {
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
   const [documentsEmployee, setDocumentsEmployee] = useState<Employee | null>(null);
 
-  const { data, isLoading, isError, error, refetch, isFetching } = useEmployees(queryParams);
+  const { data, isLoading, isError, error, refetch, isFetching } = useEmployees(queryParams, {
+    enabled: isPrivileged,
+  });
+
+  if (isAuthLoading) {
+    return null;
+  }
+
+  if (!user || !isPrivileged) {
+    return <Navigate to="/" replace />;
+  }
 
   const employees = data?.employees || [];
   const pagination = data?.pagination || {
