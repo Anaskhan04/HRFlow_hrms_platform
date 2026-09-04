@@ -8,12 +8,16 @@ import type {
   Employee,
 } from "../types";
 
-export const useEmployees = (params: EmployeeQueryParams = {}) => {
+export const useEmployees = (
+  params: EmployeeQueryParams = {},
+  options?: { enabled?: boolean }
+) => {
   return useQuery<PaginatedEmployees, Error>({
     queryKey: ["employees", params],
     queryFn: () => employeeService.getEmployees(params),
     placeholderData: (previousData) => previousData,
     staleTime: 1 * 60 * 1000,
+    enabled: options?.enabled,
   });
 };
 

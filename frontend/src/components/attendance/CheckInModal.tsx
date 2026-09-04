@@ -4,6 +4,7 @@ import { Modal } from "../ui/modal";
 import { Button } from "../ui/button";
 import { useCheckIn } from "../../hooks/useAttendance";
 import { useEmployees } from "../../hooks/useEmployees";
+import { useAuth } from "../../hooks/useAuth";
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -14,7 +15,11 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { data: employeesData } = useEmployees({ limit: 100 });
+  const { user } = useAuth();
+  const isEmployee = user?.role === "EMPLOYEE";
+  const userEmployeeId = user?.employeeId || user?.employee?.id || "";
+
+  const { data: employeesData } = useEmployees({ limit: 100 }, { enabled: !isEmployee });
   const employees = employeesData?.employees || [];
   const checkInMutation = useCheckIn();
 
@@ -22,9 +27,19 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   const [remarks, setRemarks] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setSelectedEmployeeId(isEmployee ? userEmployeeId : "");
+      setRemarks("");
+      setErrorMsg(null);
+    }
+  }, [isOpen, isEmployee, userEmployeeId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEmployeeId) {
+    const targetEmployeeId = isEmployee ? userEmployeeId : selectedEmployeeId;
+
+    if (!targetEmployeeId) {
       setErrorMsg("Please select an employee to check in.");
       return;
     }
@@ -32,10 +47,10 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
     setErrorMsg(null);
     try {
       await checkInMutation.mutateAsync({
-        employeeId: selectedEmployeeId,
+        employeeId: targetEmployeeId,
         remarks: remarks.trim() ? remarks.trim() : undefined,
       });
-      setSelectedEmployeeId("");
+      setSelectedEmployeeId(isEmployee ? userEmployeeId : "");
       setRemarks("");
       onClose();
     } catch (err) {
@@ -76,28 +91,30 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
           </div>
         </div>
 
-        {/* Select Employee */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground">
-            Employee <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={selectedEmployeeId}
-            onChange={(e) => {
-              setSelectedEmployeeId(e.target.value);
-              setErrorMsg(null);
-            }}
-            className="w-full h-10 rounded-lg border bg-background px-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            required
-          >
-            <option value="">Select an employee...</option>
-            {employees.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.firstName} {emp.lastName} ({emp.employeeCode})
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Select Employee (Preserved for ADMIN/HR/MANAGER, hidden for EMPLOYEE) */}
+        {!isEmployee && (
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">
+              Employee <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={selectedEmployeeId}
+              onChange={(e) => {
+                setSelectedEmployeeId(e.target.value);
+                setErrorMsg(null);
+              }}
+              className="w-full h-10 rounded-lg border bg-background px-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              required
+            >
+              <option value="">Select an employee...</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.firstName} {emp.lastName} ({emp.employeeCode})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Remarks */}
         <div className="space-y-1.5">

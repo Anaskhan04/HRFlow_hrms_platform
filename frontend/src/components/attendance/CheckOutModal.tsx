@@ -4,6 +4,7 @@ import { Modal } from "../ui/modal";
 import { Button } from "../ui/button";
 import { useCheckOut } from "../../hooks/useAttendance";
 import { useEmployees } from "../../hooks/useEmployees";
+import { useAuth } from "../../hooks/useAuth";
 import type { AttendanceRecord } from "../../types";
 
 interface CheckOutModalProps {
@@ -17,25 +18,37 @@ export const CheckOutModal: React.FC<CheckOutModalProps> = ({
   onClose,
   record,
 }) => {
-  const { data: employeesData } = useEmployees({ limit: 100 });
+  const { user } = useAuth();
+  const isEmployee = user?.role === "EMPLOYEE";
+  const userEmployeeId = user?.employeeId || user?.employee?.id || "";
+
+  const { data: employeesData } = useEmployees({ limit: 100 }, { enabled: !isEmployee });
   const employees = employeesData?.employees || [];
   const checkOutMutation = useCheckOut();
 
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(
-    record?.employeeId || ""
-  );
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (record?.employeeId) {
-      setSelectedEmployeeId(record.employeeId);
+    if (isOpen) {
+      if (isEmployee) {
+        setSelectedEmployeeId(userEmployeeId);
+      } else if (record?.employeeId) {
+        setSelectedEmployeeId(record.employeeId);
+      } else {
+        setSelectedEmployeeId("");
+      }
+      setRemarks("");
+      setErrorMsg(null);
     }
-  }, [record]);
+  }, [isOpen, record, isEmployee, userEmployeeId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEmployeeId) {
+    const targetEmployeeId = isEmployee ? userEmployeeId : selectedEmployeeId;
+
+    if (!targetEmployeeId) {
       setErrorMsg("Please select an employee to check out.");
       return;
     }
@@ -43,10 +56,10 @@ export const CheckOutModal: React.FC<CheckOutModalProps> = ({
     setErrorMsg(null);
     try {
       await checkOutMutation.mutateAsync({
-        employeeId: selectedEmployeeId,
+        employeeId: targetEmployeeId,
         remarks: remarks.trim() ? remarks.trim() : undefined,
       });
-      setSelectedEmployeeId("");
+      setSelectedEmployeeId(isEmployee ? userEmployeeId : "");
       setRemarks("");
       onClose();
     } catch (err) {
@@ -87,29 +100,31 @@ export const CheckOutModal: React.FC<CheckOutModalProps> = ({
           </div>
         </div>
 
-        {/* Select Employee */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground">
-            Employee <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={selectedEmployeeId}
-            onChange={(e) => {
-              setSelectedEmployeeId(e.target.value);
-              setErrorMsg(null);
-            }}
-            disabled={!!record}
-            className="w-full h-10 rounded-lg border bg-background px-3 text-sm text-foreground shadow-sm disabled:bg-muted disabled:opacity-75 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            required
-          >
-            <option value="">Select an employee...</option>
-            {employees.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.firstName} {emp.lastName} ({emp.employeeCode})
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Select Employee (Preserved for ADMIN/HR/MANAGER, hidden for EMPLOYEE) */}
+        {!isEmployee && (
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">
+              Employee <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={selectedEmployeeId}
+              onChange={(e) => {
+                setSelectedEmployeeId(e.target.value);
+                setErrorMsg(null);
+              }}
+              disabled={!!record}
+              className="w-full h-10 rounded-lg border bg-background px-3 text-sm text-foreground shadow-sm disabled:bg-muted disabled:opacity-75 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              required
+            >
+              <option value="">Select an employee...</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.firstName} {emp.lastName} ({emp.employeeCode})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Remarks */}
         <div className="space-y-1.5">

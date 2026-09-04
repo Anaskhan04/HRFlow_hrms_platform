@@ -1,5 +1,5 @@
 import React from "react";
-import { Edit2, Trash2, Users, Mail, Calendar, Building, DollarSign } from "lucide-react";
+import { Edit2, Trash2, Users, Mail, Calendar, Building, DollarSign, FileText } from "lucide-react";
 import { Button } from "../ui/button";
 import type { Employee, EmployeeStatus } from "../../types";
 
@@ -8,6 +8,7 @@ interface EmployeeTableProps {
   isLoading: boolean;
   onEdit: (employee: Employee) => void;
   onDelete: (employee: Employee) => void;
+  onViewDocuments: (employee: Employee) => void;
 }
 
 const getStatusBadge = (status: EmployeeStatus) => {
@@ -50,6 +51,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   isLoading,
   onEdit,
   onDelete,
+  onViewDocuments,
 }) => {
   if (isLoading) {
     return (
@@ -185,6 +187,15 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   {/* Actions */}
                   <td className="py-3.5 px-4 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewDocuments(emp)}
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-indigo-600 hover:bg-indigo-50"
+                        title="Documents"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"

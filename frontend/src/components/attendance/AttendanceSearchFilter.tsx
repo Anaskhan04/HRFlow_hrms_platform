@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { useAuth } from "../../hooks/useAuth";
 import type { AttendanceQueryParams, AttendanceStatus } from "../../types";
 
 interface AttendanceSearchFilterProps {
@@ -32,6 +33,10 @@ export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
   onExport,
   isExporting = false,
 }) => {
+  const { user } = useAuth();
+  const isEmployee = user?.role === "EMPLOYEE";
+  const canExport = user?.role === "ADMIN" || user?.role === "HR";
+
   const [searchInput, setSearchInput] = useState(queryParams.search || "");
 
   useEffect(() => {
@@ -59,7 +64,11 @@ export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search employee by name, code, email, or remarks..."
+            placeholder={
+              isEmployee
+                ? "Search your attendance remarks..."
+                : "Search employee by name, code, email, or remarks..."
+            }
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9 bg-background/80"
@@ -77,24 +86,26 @@ export const AttendanceSearchFilter: React.FC<AttendanceSearchFilterProps> = ({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            onClick={onExport}
-            disabled={isExporting}
-            variant="outline"
-            className="gap-2 shadow-sm font-semibold"
-          >
-            {isExporting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="hidden sm:inline">Exporting...</span>
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4" />
-                <span className="hidden sm:inline">Export</span>
-              </>
-            )}
-          </Button>
+          {canExport && (
+            <Button
+              onClick={onExport}
+              disabled={isExporting}
+              variant="outline"
+              className="gap-2 shadow-sm font-semibold"
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="hidden sm:inline">Exporting...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline">Export</span>
+                </>
+              )}
+            </Button>
+          )}
 
           <Button
             onClick={onOpenCheckInModal}

@@ -8,6 +8,8 @@ import employeeService from "../services/employee.service";
 import AddEmployeeModal from "../components/employees/AddEmployeeModal";
 import EditEmployeeModal from "../components/employees/EditEmployeeModal";
 import DeleteEmployeeDialog from "../components/employees/DeleteEmployeeDialog";
+import EmployeeDocumentManager from "../components/employees/EmployeeDocumentManager";
+import { Modal } from "../components/ui/modal";
 import { Button } from "../components/ui/button";
 import { cn } from "../utils/cn";
 import type { Employee, EmployeeQueryParams } from "../types";
@@ -27,6 +29,7 @@ export const EmployeeListPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
+  const [documentsEmployee, setDocumentsEmployee] = useState<Employee | null>(null);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useEmployees(queryParams);
 
@@ -123,6 +126,7 @@ export const EmployeeListPage: React.FC = () => {
         isLoading={isLoading}
         onEdit={(emp) => setEditingEmployee(emp)}
         onDelete={(emp) => setDeletingEmployee(emp)}
+        onViewDocuments={(emp) => setDocumentsEmployee(emp)}
       />
 
       {/* Pagination Controls */}
@@ -149,6 +153,19 @@ export const EmployeeListPage: React.FC = () => {
         isOpen={!!deletingEmployee}
         onClose={() => setDeletingEmployee(null)}
       />
+
+      {documentsEmployee && (
+        <Modal
+          isOpen={!!documentsEmployee}
+          onClose={() => setDocumentsEmployee(null)}
+          title={`Documents: ${documentsEmployee.firstName} ${documentsEmployee.lastName}`}
+          description={`Manage documents for ${documentsEmployee.firstName} ${documentsEmployee.lastName}`}
+        >
+          <div className="pt-4 max-h-[70vh] overflow-y-auto">
+            <EmployeeDocumentManager employeeId={documentsEmployee.id} canManage={true} />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

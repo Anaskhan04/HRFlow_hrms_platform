@@ -9,10 +9,14 @@ import {
   CheckOutModal,
 } from "../components/attendance";
 import { Button } from "../components/ui/button";
+import { useAuth } from "../hooks/useAuth";
 import { attendanceService } from "../services/attendance.service";
 import type { AttendanceRecord, AttendanceQueryParams } from "../types";
 
 export const AttendanceListPage: React.FC = () => {
+  const { user } = useAuth();
+  const isEmployee = user?.role === "EMPLOYEE";
+
   const [queryParams, setQueryParams] = useState<AttendanceQueryParams>({
     page: 1,
     limit: 10,
@@ -105,7 +109,9 @@ export const AttendanceListPage: React.FC = () => {
             </span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Monitor daily employee check-ins, check-outs, and working hours across departments.
+            {isEmployee
+              ? "View and record your daily attendance check-ins, check-outs, and working hours."
+              : "Monitor daily employee check-ins, check-outs, and working hours across departments."}
           </p>
         </div>
 
