@@ -8,13 +8,13 @@ const router = Router();
 
 router.use(authenticate);
 
-router.post("/", authorizeRole(Role.ADMIN, Role.HR), organizationController.create);
+router.post("/", authorizeRole(Role.ADMIN), organizationController.create);
 
 router.get("/", organizationController.getAll);
 
 router.get("/:id", organizationController.getById);
 
-router.put("/:id", authorizeRole(Role.ADMIN, Role.HR), organizationController.update);
+router.put("/:id", authorizeRole(Role.ADMIN), organizationController.update);
 
 router.delete("/:id", authorizeRole(Role.ADMIN), organizationController.remove);
 

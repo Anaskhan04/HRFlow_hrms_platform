@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Building2, Save, Upload, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Building2, Save, Upload, AlertCircle, CheckCircle2, Lock } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 import { useOrganizations, useCreateOrganization, useUpdateOrganization } from "../hooks/useOrganizations";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -20,6 +21,9 @@ const organizationSchema = z.object({
 type OrganizationFormValues = z.infer<typeof organizationSchema>;
 
 export const OrganizationSetupPage: React.FC = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+
   const { data: organizations, isLoading: isFetching } = useOrganizations();
   const createMutation = useCreateOrganization();
   const updateMutation = useUpdateOrganization();
@@ -58,6 +62,8 @@ export const OrganizationSetupPage: React.FC = () => {
   }, [currentOrg, reset]);
 
   const onSubmit = async (data: OrganizationFormValues) => {
+    if (!isAdmin) return;
+
     setSuccessMessage(null);
     setErrorMessage(null);
     
@@ -118,20 +124,36 @@ export const OrganizationSetupPage: React.FC = () => {
       )}
 
       <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
-        <CardHeader className="border-b border-slate-100 dark:border-slate-800/50 pb-6">
-          <CardTitle>Company Details</CardTitle>
-          <CardDescription>
-            This information will be displayed on payslips, reports, and communications.
-          </CardDescription>
+        <CardHeader className="border-b border-slate-100 dark:border-slate-800/50 pb-6 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle>Company Details</CardTitle>
+              <CardDescription className="mt-1">
+                This information will be displayed on payslips, reports, and communications.
+              </CardDescription>
+            </div>
+            {!isAdmin && (
+              <div className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                <Lock className="h-3 w-3" />
+                <span>View Only</span>
+              </div>
+            )}
+          </div>
+          {!isAdmin && (
+            <p className="text-xs text-muted-foreground bg-muted/40 p-2.5 rounded-lg border border-border/40">
+              Editing company details requires Administrator privileges. Contact an Administrator to request changes.
+            </p>
+          )}
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-6 pt-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">Company Name <span className="text-destructive">*</span></Label>
+                <Label htmlFor="name">Company Name {isAdmin && <span className="text-destructive">*</span>}</Label>
                 <Input
                   id="name"
                   placeholder="Acme Corp"
+                  disabled={!isAdmin}
                   {...register("name")}
                   className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
@@ -144,6 +166,7 @@ export const OrganizationSetupPage: React.FC = () => {
                   id="email"
                   type="email"
                   placeholder="contact@acme.com"
+                  disabled={!isAdmin}
                   {...register("email")}
                   className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
@@ -155,6 +178,7 @@ export const OrganizationSetupPage: React.FC = () => {
                 <Input
                   id="phone"
                   placeholder="+1 (555) 000-0000"
+                  disabled={!isAdmin}
                   {...register("phone")}
                   className={errors.phone ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
@@ -166,6 +190,7 @@ export const OrganizationSetupPage: React.FC = () => {
                 <Input
                   id="website"
                   placeholder="https://acme.com"
+                  disabled={!isAdmin}
                   {...register("website")}
                   className={errors.website ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
@@ -177,6 +202,7 @@ export const OrganizationSetupPage: React.FC = () => {
                 <Input
                   id="address"
                   placeholder="123 Business Avenue, Suite 100, Tech District"
+                  disabled={!isAdmin}
                   {...register("address")}
                   className={errors.address ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
@@ -184,30 +210,32 @@ export const OrganizationSetupPage: React.FC = () => {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800/50 pt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => reset()}
-              disabled={isSubmitting || !isDirty}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || !isDirty}
-              className="gap-2"
-            >
-              {isSubmitting ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              ) : currentOrg ? (
-                <Upload className="h-4 w-4" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              {currentOrg ? "Update Details" : "Save Details"}
-            </Button>
-          </CardFooter>
+          {isAdmin && (
+            <CardFooter className="flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800/50 pt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => reset()}
+                disabled={isSubmitting || !isDirty}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || !isDirty}
+                className="gap-2"
+              >
+                {isSubmitting ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : currentOrg ? (
+                  <Upload className="h-4 w-4" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {currentOrg ? "Update Details" : "Save Details"}
+              </Button>
+            </CardFooter>
+          )}
         </form>
       </Card>
     </div>
