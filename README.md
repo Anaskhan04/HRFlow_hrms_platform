@@ -99,7 +99,7 @@ HRFlow/
 
 ```bash
 git clone <your-repository-url>
-cd Zidiodevlopment-HRFlow
+cd HRFlow
 ```
 
 ### Install Dependencies
